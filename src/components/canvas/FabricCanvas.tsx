@@ -6,6 +6,8 @@ import { useCanvasStore } from "@/lib/store/canvas-store";
 import { CanvasState } from "@/lib/types";
 
 function syncStateToFabric(fabricCanvas: fabric.Canvas, state: CanvasState) {
+  console.log(`[DEBUG 8] syncStateToFabric rendering ${state.elements.length} elements`);
+  
   fabricCanvas.clear();
 
   if (state.background.type === "solid") {
@@ -70,7 +72,13 @@ function syncStateToFabric(fabricCanvas: fabric.Canvas, state: CanvasState) {
         });
       }
     } else if (el.type === "image") {
-       obj = new fabric.Rect({
+      // Map asset keys to picsum for the hackathon prototype
+      const url = el.src === "asset_1" ? "https://picsum.photos/seed/asset1/800/600" :
+                  el.src === "asset_2" ? "https://picsum.photos/seed/asset2/1000/1000" :
+                  el.src || "https://picsum.photos/800/600";
+                  
+      // We create a temporary rectangle while the image loads
+      obj = new fabric.Rect({
           left: el.x,
           top: el.y,
           width: el.width,
@@ -78,7 +86,40 @@ function syncStateToFabric(fabricCanvas: fabric.Canvas, state: CanvasState) {
           fill: "#e0e0e0", 
           originX: "center",
           originY: "center",
+      });
+      
+      // Load image asynchronously
+      fabric.Image.fromURL(url).then((img) => {
+        if (!img) return;
+        
+        // Match the layout
+        img.set({
+          id: el.id,
+          left: el.x,
+          top: el.y,
+          width: img.width, // actual original width
+          height: img.height, // actual original height
+          scaleX: el.width / (img.width || 1),
+          scaleY: el.height / (img.height || 1),
+          angle: el.rotation,
+          opacity: el.opacity,
+          visible: el.visible,
+          originX: "center",
+          originY: "center",
+          selectable: !el.locked,
+          evented: true,
+          hasControls: true,
         });
+        
+        // Replace the placeholder with the actual image
+        const canvasObjects = fabricCanvas.getObjects();
+        const placeholder = canvasObjects.find(o => o.get("id" as keyof fabric.FabricObject) === el.id && o.type === "rect");
+        if (placeholder) {
+          fabricCanvas.remove(placeholder);
+        }
+        fabricCanvas.add(img);
+        fabricCanvas.requestRenderAll();
+      }).catch(err => console.error("Failed to load image", err));
     }
 
     if (obj) {
@@ -90,9 +131,11 @@ function syncStateToFabric(fabricCanvas: fabric.Canvas, state: CanvasState) {
         hasControls: true,
       });
       fabricCanvas.add(obj);
+      console.log(`[DEBUG 8] Rendered element ID: ${el.id}, type: ${el.type}`);
     }
   });
 
+  console.log(`[DEBUG 7] Fabric object count after sync:`, fabricCanvas.getObjects().length);
   fabricCanvas.requestRenderAll();
 }
 
@@ -102,10 +145,14 @@ export default function FabricCanvas() {
   
   const canvasState = useCanvasStore((s) => s.canvas);
   const updateElement = useCanvasStore((s) => s.updateElement);
+  const removeElement = useCanvasStore((s) => s.removeElement);
   const commit = useCanvasStore((s) => s.commit);
   
   const isInternalUpdate = useCanvasStore((s) => s.isInternalUpdate);
   const setInternalUpdate = useCanvasStore((s) => s.setInternalUpdate);
+  
+  const isAnimating = useCanvasStore((s) => s.isAnimating);
+  const setAnimating = useCanvasStore((s) => s.setAnimating);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -160,7 +207,8 @@ export default function FabricCanvas() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
         // Prevent deleting if user is editing text
-        if (canvas.getActiveObject()?.isEditing) return;
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && (activeObj as any).isEditing) return;
         
         const activeObjects = canvas.getActiveObjects();
         if (activeObjects.length > 0) {
@@ -199,8 +247,118 @@ export default function FabricCanvas() {
       return;
     }
     
+    if (isAnimating) {
+      const canvas = fabricCanvasRef.current;
+      const startElements = new Map<string, any>();
+      
+      // Capture start state
+      canvas.getObjects().forEach(obj => {
+        const id = obj.get("id" as keyof fabric.FabricObject) as string;
+        if (id) {
+          startElements.set(id, {
+            left: obj.left || 0,
+            top: obj.top || 0,
+            angle: obj.angle || 0,
+            scaleX: obj.scaleX || 1,
+            scaleY: obj.scaleY || 1,
+            opacity: obj.opacity ?? 1,
+          });
+        }
+      });
+
+      // Render the end state secretly to grab target coordinates
+      syncStateToFabric(canvas, canvasState);
+
+      // Now revert all visual props to start state for the animation
+      canvas.getObjects().forEach(obj => {
+        const id = obj.get("id" as keyof fabric.FabricObject) as string;
+        const start = id ? startElements.get(id) : null;
+        
+        // Save target in a custom property
+        obj.set("targetProps", {
+          left: obj.left,
+          top: obj.top,
+          angle: obj.angle,
+          scaleX: obj.scaleX,
+          scaleY: obj.scaleY,
+          opacity: obj.opacity
+        });
+
+        if (start) {
+          obj.set(start);
+        } else {
+          // New objects start faded and slightly smaller
+          obj.set({ opacity: 0, scaleX: (obj.scaleX || 1) * 0.9, scaleY: (obj.scaleY || 1) * 0.9 });
+        }
+      });
+
+      canvas.requestRenderAll();
+
+      const duration = 1500; // 1.5s as per spec
+      let startTime: number | null = null;
+      let frameId: number;
+
+      const animate = (time: number) => {
+        if (!startTime) startTime = time;
+        const elapsed = time - startTime;
+        let progress = Math.min(elapsed / duration, 1);
+        
+        // easeOutCubic easing
+        progress = 1 - Math.pow(1 - progress, 3);
+        
+        canvas.getObjects().forEach(obj => {
+          const id = obj.get("id" as keyof fabric.FabricObject) as string;
+          const start = id ? startElements.get(id) : null;
+          const target = obj.get("targetProps" as keyof fabric.FabricObject) as any;
+          
+          if (!target) return;
+          
+          const startLeft = start ? start.left : target.left;
+          const startTop = start ? start.top : target.top;
+          const startAngle = start ? start.angle : target.angle;
+          const startScaleX = start ? start.scaleX : target.scaleX * 0.9;
+          const startScaleY = start ? start.scaleY : target.scaleY * 0.9;
+          const startOpacity = start ? start.opacity : 0;
+          
+          obj.set({
+            left: startLeft + (target.left - startLeft) * progress,
+            top: startTop + (target.top - startTop) * progress,
+            angle: startAngle + (target.angle - startAngle) * progress,
+            scaleX: startScaleX + (target.scaleX - startScaleX) * progress,
+            scaleY: startScaleY + (target.scaleY - startScaleY) * progress,
+            opacity: startOpacity + (target.opacity - startOpacity) * progress,
+          });
+        });
+        
+        canvas.requestRenderAll();
+        
+        if (progress < 1) {
+          frameId = requestAnimationFrame(animate);
+        } else {
+          setAnimating(false);
+        }
+      };
+      
+      frameId = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(frameId);
+    }
+    
     syncStateToFabric(fabricCanvasRef.current, canvasState);
-  }, [canvasState, isInternalUpdate, setInternalUpdate]);
+  }, [canvasState, isInternalUpdate, setInternalUpdate, isAnimating, setAnimating]);
+
+  const exportRequested = useCanvasStore((s) => s.exportRequested);
+  
+  useEffect(() => {
+    if (exportRequested > 0 && fabricCanvasRef.current) {
+      const dataURL = fabricCanvasRef.current.toDataURL({ format: "png", quality: 1, multiplier: 2 });
+      const link = document.createElement("a");
+      link.download = "imagery-export.png";
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, [exportRequested]);
 
   return (
     <div style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.1)" }}>

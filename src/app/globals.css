@@ -1,16 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-main: #0a0a0a;
-  --bg-panel: #141414;
-  --bg-hover: #1f1f1f;
-  --border: #262626;
-  --text-main: #ffffff;
-  --text-muted: #a3a3a3;
-  --accent: #6d28d9;
-  --accent-hover: #5b21b6;
+  --bg-main: #101010;
+  --bg-panel: #171717;
+  --bg-hover: #222222;
+  --border: #2a2a2a;
+  --text-primary: #ececec;
+  --text-muted: #888888;
+  --accent: #f3e8d6;
+  --accent-text: #101010;
+  --accent-hover: #e5dac8;
   
-  --checker-color: rgba(255, 255, 255, 0.05);
+  --canvas-bg: #1a1a2e;
+  --dot-color: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -21,7 +23,7 @@
 
 body {
   background-color: var(--bg-main);
-  color: var(--text-main);
+  color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   overflow: hidden;
 }
@@ -41,11 +43,14 @@ button:disabled {
 
 .primary-btn {
   background-color: var(--accent);
-  color: white;
+  color: var(--accent-text);
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .primary-btn:hover:not(:disabled) {
@@ -65,14 +70,11 @@ button:disabled {
 
 .icon-btn:hover:not(:disabled) {
   background-color: var(--bg-hover);
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
-.checkerboard-bg {
-  background-color: #1a1a1a;
-  background-image: 
-    linear-gradient(45deg, var(--checker-color) 25%, transparent 25%, transparent 75%, var(--checker-color) 75%, var(--checker-color)),
-    linear-gradient(45deg, var(--checker-color) 25%, transparent 25%, transparent 75%, var(--checker-color) 75%, var(--checker-color));
+.dot-grid-bg {
+  background-color: var(--bg-main);
+  background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
   background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
 }

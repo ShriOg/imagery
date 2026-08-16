@@ -17,8 +17,17 @@ interface CanvasStoreState {
   messages: Array<{ role: 'user' | 'assistant', content: string }>;
   addMessage: (msg: { role: 'user' | 'assistant', content: string }) => void;
   
+  // Animation state
+  isAnimating: boolean;
+  setAnimating: (val: boolean) => void;
+
+  // Export trigger
+  exportRequested: number;
+  requestExport: () => void;
+
   // Actions
   updateCanvas: (newState: CanvasState) => void;
+  updateCanvasFromAI: (newState: CanvasState) => void;
   updateElement: (id: string, updates: Partial<CanvasElement>) => void;
   removeElement: (id: string) => void;
   
@@ -75,10 +84,14 @@ export const useCanvasStore = create<CanvasStoreState>()(
     aiStatus: 'idle',
     aiErrorMessage: null,
     messages: [],
+    isAnimating: false,
+    exportRequested: 0,
 
     setAiStatus: (status) => set((state) => { state.aiStatus = status; }),
     setAiError: (msg) => set((state) => { state.aiErrorMessage = msg; }),
     addMessage: (msg) => set((state) => { state.messages.push(msg); }),
+    setAnimating: (val) => set((state) => { state.isAnimating = val; }),
+    requestExport: () => set((state) => { state.exportRequested += 1; }),
 
     setInternalUpdate: (val) => set((state) => { state.isInternalUpdate = val; }),
 
@@ -93,6 +106,14 @@ export const useCanvasStore = create<CanvasStoreState>()(
     updateCanvas: (newState) => set((state) => {
       get().commit();
       state.canvas = newState;
+    }),
+
+    updateCanvasFromAI: (newState) => set((state) => {
+      get().commit();
+      state.canvas = newState;
+      state.isAnimating = true; // Tell FabricCanvas to animate to this state rather than instant redraw
+      console.log("[DEBUG 5] Zustand canvas updated from AI.");
+      console.log("[DEBUG 6] Number of elements in Zustand:", state.canvas.elements.length);
     }),
 
     updateElement: (id, updates) => set((state) => {
