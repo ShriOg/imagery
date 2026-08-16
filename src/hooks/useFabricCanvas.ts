@@ -201,15 +201,43 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
         .then((img) => {
           if (!fabricRef.current) return;
           const canvas = fabricRef.current;
+
+          const naturalW = img.width || 1;
+          const naturalH = img.height || 1;
+          const naturalAspect = naturalW / naturalH;
+
+          // Preserve exact original aspect ratio
+          let finalW = imgEl.width;
+          let finalH = imgEl.height;
+          if (imgEl.aspectRatio) {
+            finalH = Math.round(finalW / imgEl.aspectRatio);
+          } else {
+            finalH = Math.round(finalW / naturalAspect);
+          }
           
           img.set({
             ...commonProps,
-            width: img.width,
-            height: img.height,
-            scaleX: imgEl.width / (img.width || 1),
-            scaleY: imgEl.height / (img.height || 1),
+            left: imgEl.x,
+            top: imgEl.y,
+            width: naturalW,
+            height: naturalH,
+            scaleX: finalW / naturalW,
+            scaleY: finalH / naturalH,
             flipX: imgEl.flipX || false,
             flipY: imgEl.flipY || false,
+            lockUniScaling: true,
+          });
+
+          img.setControlsVisibility({
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false,
+            tr: true,
+            tl: true,
+            br: true,
+            bl: true,
+            mtr: true,
           });
 
           (img as any).data = { id: el.id };
@@ -322,9 +350,15 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
             }
           } else if (el.type === "image" && existing.type === "image") {
             const imgEl = el as ImageElement;
+            const img = existing as fabric.FabricImage;
+            const naturalW = img.width || 1;
+            const naturalH = img.height || 1;
             existing.set({
+              scaleX: imgEl.width / naturalW,
+              scaleY: imgEl.height / naturalH,
               flipX: imgEl.flipX || false,
               flipY: imgEl.flipY || false,
+              lockUniScaling: true,
             });
           }
         } else {
@@ -412,12 +446,14 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
           const scaledW = Math.max(10, Math.round(obj.getScaledWidth()));
           const scaledH = Math.max(10, Math.round(obj.getScaledHeight()));
 
-          obj.set({
-            scaleX: 1,
-            scaleY: 1,
-            width: scaledW,
-            height: scaledH,
-          });
+          if (obj.type !== "image") {
+            obj.set({
+              scaleX: 1,
+              scaleY: 1,
+              width: scaledW,
+              height: scaledH,
+            });
+          }
 
           updates.push({
             id,
@@ -439,12 +475,14 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
           const scaledW = Math.max(10, Math.round(target.getScaledWidth()));
           const scaledH = Math.max(10, Math.round(target.getScaledHeight()));
 
-          target.set({
-            scaleX: 1,
-            scaleY: 1,
-            width: scaledW,
-            height: scaledH,
-          });
+          if (target.type !== "image") {
+            target.set({
+              scaleX: 1,
+              scaleY: 1,
+              width: scaledW,
+              height: scaledH,
+            });
+          }
 
           updateElement(id, {
             x: Math.round(target.left || 0),

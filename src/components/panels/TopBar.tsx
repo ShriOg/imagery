@@ -1,21 +1,11 @@
 "use client";
 
-import React from "react";
-import {
-  Undo2,
-  Redo2,
-  Download,
-  Sparkles,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  ChevronDown,
-  Layers,
-} from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { useToolStore } from "@/store/useToolStore";
 import { useHistory } from "@/hooks/useHistory";
-import { TooltipButton } from "@/components/ui/TooltipButton";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 const ZOOM_PRESETS = [0.25, 0.5, 0.68, 0.75, 1.0, 1.25, 1.5, 2.0];
@@ -27,103 +17,107 @@ export function TopBar() {
 
   const zoom = useToolStore((s) => s.zoom);
   const setZoom = useToolStore((s) => s.setZoom);
-  const zoomIn = useToolStore((s) => s.zoomIn);
-  const zoomOut = useToolStore((s) => s.zoomOut);
-  const resetViewport = useToolStore((s) => s.resetViewport);
   const setExportModalOpen = useToolStore((s) => s.setExportModalOpen);
-  const toggleLayerDrawer = useToolStore((s) => s.toggleLayerDrawer);
-  const isLayerDrawerOpen = useToolStore((s) => s.isLayerDrawerOpen);
+
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   return (
-    <header className="h-14 w-full flex items-center justify-between px-4 bg-zinc-900/75 backdrop-blur-2xl border-b border-zinc-800/80 z-30 select-none">
-      {/* Left: Branding & Document Title */}
-      <div className="flex items-center gap-3">
-        {/* Studio Emblem */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 ring-1 ring-white/20">
-            <Sparkles className="w-4 h-4 text-zinc-950" />
+    <>
+      <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container-low/95 backdrop-blur-2xl z-40 px-6 flex items-center justify-between border-b border-outline-variant/10 select-none">
+        {/* Left: Hamburger + Logo + Project Title */}
+        <div className="flex items-center gap-4">
+          {/* Hamburger Menu Trigger */}
+          <button
+            onClick={() => setIsNavOpen(true)}
+            className="p-2 -ml-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none cursor-pointer flex items-center justify-center"
+            title="Open Navigation"
+          >
+            <span className="material-symbols-outlined text-[22px]">menu</span>
+          </button>
+
+          {/* Logo & Brand */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <img
+              alt="Logo"
+              className="h-7 w-auto transition-transform group-hover:scale-105"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf9sJfkcZ6Hh5pMoK0637r0eaUSLpmVwRqf9u8UPJXTcSA34CuN56IEbHKjI98hn1CRX2eMZi-LVV_15YAPK5B7kNcMDSGVAxl-Y9TH7oWI0U0-LFaIfbke9RWCyFQp4X6UsqRRbBSvs7lFWv-rjZHJ2mguAVnH5dtBM2z2vIOX-o9cm49oYBzMDCGKVWuSoBcDnlFpCdernsXLnpqAQHExW_cTymRysWSuh_PaC5c3n67HhH5LIL9"
+            />
+            <span className="font-headline-sm text-base text-on-surface font-semibold hidden sm:inline">
+              Imagery
+            </span>
+          </Link>
+
+          <div className="w-px h-5 bg-outline-variant/20 mx-1 hidden sm:block"></div>
+
+          {/* Project Title */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[16px]">brush</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-label-sm text-[9px] text-on-surface-variant uppercase tracking-wider font-semibold">
+                Project
+              </span>
+              <input
+                type="text"
+                value={document.title}
+                onChange={(e) => updateDocumentProps({ title: e.target.value })}
+                className="font-body-md text-xs sm:text-sm text-on-surface font-medium bg-transparent outline-none border-b border-transparent hover:border-surface-variant focus:border-primary transition-colors max-w-[160px] sm:max-w-[220px]"
+                placeholder="Untitled Project"
+              />
+            </div>
           </div>
-          <span className="font-semibold text-sm tracking-tight text-zinc-100 hidden sm:inline">
-            Imagery
-          </span>
-          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-            Studio
-          </span>
         </div>
 
-        <div className="w-px h-4 bg-zinc-800 hidden sm:block" />
+        {/* Right: Actions, Zoom, Export, Search, Notifications, Profile */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Undo / Redo */}
+          <div className="flex items-center gap-0.5 bg-surface-variant/40 p-1 rounded-xl">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <span className="material-symbols-outlined text-[18px]">undo</span>
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y)"
+              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <span className="material-symbols-outlined text-[18px]">redo</span>
+            </button>
+          </div>
 
-        {/* Editable Title */}
-        <input
-          type="text"
-          value={document.title}
-          onChange={(e) => updateDocumentProps({ title: e.target.value })}
-          className="text-xs font-medium text-zinc-300 hover:text-zinc-100 bg-transparent hover:bg-zinc-800/50 px-2 py-1 rounded-lg border border-transparent hover:border-zinc-700/50 transition-all outline-none max-w-[160px] sm:max-w-[220px] truncate"
-          placeholder="Untitled Design"
-        />
+          <div className="w-px h-5 bg-outline-variant/20 hidden sm:block"></div>
 
-        {/* Canvas Dimension Badge */}
-        <span className="text-[11px] font-mono text-zinc-500 hidden md:inline px-2 py-0.5 rounded-md bg-zinc-800/40 border border-zinc-800">
-          {document.width} × {document.height}
-        </span>
-      </div>
-
-      {/* Center: Undo / Redo */}
-      <div className="flex items-center gap-1 bg-zinc-800/60 p-1 rounded-xl border border-zinc-700/40">
-        <TooltipButton
-          tooltip="Undo"
-          shortcut="Ctrl+Z"
-          size="sm"
-          disabled={!canUndo}
-          onClick={undo}
-        >
-          <Undo2 className="w-3.5 h-3.5" />
-        </TooltipButton>
-
-        <TooltipButton
-          tooltip="Redo"
-          shortcut="Ctrl+Shift+Z"
-          size="sm"
-          disabled={!canRedo}
-          onClick={redo}
-        >
-          <Redo2 className="w-3.5 h-3.5" />
-        </TooltipButton>
-      </div>
-
-      {/* Right: Viewport Zoom, Layers, Export Trigger */}
-      <div className="flex items-center gap-2">
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-0.5 bg-zinc-800/60 p-1 rounded-xl border border-zinc-700/40">
-          <TooltipButton tooltip="Zoom Out" size="sm" onClick={zoomOut}>
-            <ZoomOut className="w-3.5 h-3.5" />
-          </TooltipButton>
-
-          {/* Zoom Preset Dropdown */}
+          {/* Zoom */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-1 px-2 py-1 text-xs font-mono text-zinc-300 hover:text-zinc-100 rounded-lg hover:bg-zinc-700/50 outline-none transition-colors">
+              <button className="flex items-center gap-1.5 font-label-md text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/60 px-2.5 py-1.5 rounded-xl border border-outline-variant/10 transition-colors outline-none cursor-pointer">
+                <span className="material-symbols-outlined text-[16px]">zoom_in</span>
                 <span>{Math.round(zoom * 100)}%</span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
               </button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content
-                sideOffset={6}
-                className="z-50 w-32 p-1 bg-zinc-900/95 backdrop-blur-2xl border border-zinc-700/60 rounded-xl shadow-2xl animate-in fade-in-0 zoom-in-95"
+                sideOffset={8}
+                className="z-50 w-32 p-2 bg-surface-container-high/95 backdrop-blur-2xl border border-outline-variant/20 rounded-2xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-1"
               >
                 {ZOOM_PRESETS.map((preset) => (
                   <DropdownMenu.Item
                     key={preset}
                     onClick={() => setZoom(preset)}
-                    className="flex items-center justify-between px-2.5 py-1.5 text-xs font-mono text-zinc-300 hover:bg-amber-500/20 hover:text-amber-300 rounded-lg cursor-pointer outline-none transition-colors"
+                    className="flex items-center justify-between px-3 py-2 text-label-md font-label-md text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container rounded-xl cursor-pointer outline-none transition-colors"
                   >
                     <span>{Math.round(preset * 100)}%</span>
                     {preset === 1.0 && (
-                      <span className="text-[10px] font-sans text-zinc-500">100%</span>
+                      <span className="text-[10px] opacity-50">100%</span>
                     )}
                     {preset === 0.68 && (
-                      <span className="text-[10px] font-sans text-amber-400">Fit</span>
+                      <span className="text-[10px] text-primary">Fit</span>
                     )}
                   </DropdownMenu.Item>
                 ))}
@@ -131,34 +125,121 @@ export function TopBar() {
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
 
-          <TooltipButton tooltip="Zoom In" size="sm" onClick={zoomIn}>
-            <ZoomIn className="w-3.5 h-3.5" />
-          </TooltipButton>
+          {/* Export Button */}
+          <button
+            onClick={() => setExportModalOpen(true)}
+            className="px-5 py-1.5 bg-primary text-on-primary font-label-md text-xs font-semibold rounded-full shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-all hover:scale-105 active:scale-95 outline-none cursor-pointer"
+          >
+            Export
+          </button>
 
-          <TooltipButton tooltip="Fit to Screen" size="sm" onClick={resetViewport}>
-            <Maximize2 className="w-3.5 h-3.5" />
-          </TooltipButton>
+          <div className="w-px h-5 bg-outline-variant/20 hidden md:block"></div>
+
+          {/* Search & Notifications & Profile */}
+          <div className="flex items-center gap-1.5">
+            <button className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex">
+              <span className="material-symbols-outlined text-[20px]">search</span>
+            </button>
+            <button className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex">
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+            </button>
+            <img
+              alt="Profile"
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed-dim/20 ml-1"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_d_iY_ZcmsZaivAKpm_unHS0JFH0vHQuZpWn8MKQbJtdx6ruoy8vM2W0X8eUrgHC4UE2tTAIafaiuGDzmZxSGVv99e6reXIUYvZGfFflaLm-tKYym8zlHQgqY5CkLntetpIFVOW8ajuS0bkN0TkJabvSoB6JiAhdt3zZLtjMI_9cQayibnIxZ3RSvcohBdAGFN-GmdMsLyfUtJZTn-W7vJiqIKTwaS-jOhfoKiIzXbkMXtSusa5Ah"
+            />
+          </div>
         </div>
+      </header>
 
-        {/* Layers Drawer Toggle */}
-        <TooltipButton
-          tooltip="Layer Stack"
-          size="md"
-          isActive={isLayerDrawerOpen}
-          onClick={toggleLayerDrawer}
-        >
-          <Layers className="w-4 h-4" />
-        </TooltipButton>
+      {/* Slide-out Navigation Drawer */}
+      <AnimatePresence>
+        {isNavOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNavOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            />
 
-        {/* High-Res Export Action */}
-        <button
-          onClick={() => setExportModalOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-medium text-xs shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.96] outline-none"
-        >
-          <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span>Export</span>
-        </button>
-      </div>
-    </header>
+            {/* Slide-out Panel */}
+            <motion.aside
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
+              transition={{ type: "spring", stiffness: 350, damping: 32 }}
+              className="fixed top-0 left-0 bottom-0 w-72 bg-surface-container-low border-r border-outline-variant/15 z-50 flex flex-col p-6 shadow-2xl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-6 border-b border-outline-variant/10">
+                <div className="flex items-center gap-3">
+                  <img
+                    alt="Logo"
+                    className="h-8"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf9sJfkcZ6Hh5pMoK0637r0eaUSLpmVwRqf9u8UPJXTcSA34CuN56IEbHKjI98hn1CRX2eMZi-LVV_15YAPK5B7kNcMDSGVAxl-Y9TH7oWI0U0-LFaIfbke9RWCyFQp4X6UsqRRbBSvs7lFWv-rjZHJ2mguAVnH5dtBM2z2vIOX-o9cm49oYBzMDCGKVWuSoBcDnlFpCdernsXLnpqAQHExW_cTymRysWSuh_PaC5c3n67HhH5LIL9"
+                  />
+                  <span className="font-headline-sm text-lg text-on-surface font-semibold">
+                    Imagery
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsNavOpen(false)}
+                  className="p-1.5 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors outline-none"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="flex-1 py-6 space-y-2">
+                <Link
+                  href="/editor"
+                  onClick={() => setIsNavOpen(false)}
+                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all bg-primary-container text-on-primary-container font-semibold text-sm"
+                >
+                  <span className="material-symbols-outlined text-[20px]">brush</span>
+                  <span>Studio Editor</span>
+                </Link>
+                <Link
+                  href="/"
+                  onClick={() => setIsNavOpen(false)}
+                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm"
+                >
+                  <span className="material-symbols-outlined text-[20px]">home</span>
+                  <span>Home / Upload</span>
+                </Link>
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); setIsNavOpen(false); }}
+                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm"
+                >
+                  <span className="material-symbols-outlined text-[20px]">folder_open</span>
+                  <span>Projects</span>
+                </a>
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); setIsNavOpen(false); }}
+                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm"
+                >
+                  <span className="material-symbols-outlined text-[20px]">image</span>
+                  <span>Assets</span>
+                </a>
+              </nav>
+
+              {/* Footer */}
+              <div className="pt-4 border-t border-outline-variant/10 flex items-center justify-between text-xs text-on-surface-variant">
+                <span>Imagery Studio v2.0</span>
+                <span className="text-[10px] bg-surface-variant px-2 py-0.5 rounded-md font-mono">PRO</span>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
+
+

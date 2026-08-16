@@ -68,28 +68,53 @@ export function AssetPickerModal() {
 
   const categories = ["All", "Architecture", "Editorial", "Abstract", "Interior", "Portrait", "Texture", "Nature"];
 
+  const document = useCanvasStore((s) => s.document);
+
   const handleInsertImage = (src: string, title?: string) => {
-    const id = `el_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-    const imageEl: ImageElement = {
-      id,
-      name: title || "Image",
-      type: "image",
-      src,
-      x: 540,
-      y: 540,
-      width: 480,
-      height: 480,
-      aspectRatio: 1,
-      rotation: 0,
-      opacity: 1,
-      zIndex: 0,
-      locked: false,
-      visible: true,
-      flipX: false,
-      flipY: false,
+    const img = new window.Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      const nativeW = img.width;
+      const nativeH = img.height;
+
+      const maxW = document.width * 0.8;
+      const maxH = document.height * 0.8;
+
+      let targetW = nativeW;
+      let targetH = nativeH;
+
+      if (targetW > maxW || targetH > maxH) {
+        const scale = Math.min(maxW / nativeW, maxH / nativeH);
+        targetW = nativeW * scale;
+        targetH = nativeH * scale;
+      }
+
+      const x = document.width / 2;
+      const y = document.height / 2;
+
+      const id = `el_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+      const imageEl: ImageElement = {
+        id,
+        name: title || "Image",
+        type: "image",
+        src,
+        x,
+        y,
+        width: targetW,
+        height: targetH,
+        aspectRatio: nativeW / nativeH,
+        rotation: 0,
+        opacity: 1,
+        zIndex: 0,
+        locked: false,
+        visible: true,
+        flipX: false,
+        flipY: false,
+      };
+      addElement(imageEl);
+      setAssetModalOpen(false);
     };
-    addElement(imageEl);
-    setAssetModalOpen(false);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

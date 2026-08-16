@@ -5,7 +5,6 @@ import { useFabricCanvas } from "@/hooks/useFabricCanvas";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useToolStore } from "@/store/useToolStore";
 import { useCanvasStore } from "@/store/useCanvasStore";
-import { FloatingContextToolbar } from "./FloatingContextToolbar";
 import { ImageElement } from "@/types/canvas";
 
 export function CanvasWorkspace() {
@@ -34,6 +33,13 @@ export function CanvasWorkspace() {
   useEffect(() => {
     if (fabricCanvas) {
       (window as any).__imageryFabricCanvas = fabricCanvas;
+      
+      // Update Fabric selection theme to match the new static UI design tokens
+      fabricCanvas.set({
+        selectionColor: "rgba(255, 226, 171, 0.1)", // primary with opacity
+        selectionBorderColor: "#fbbc00", // surface-tint / primary-fixed-dim
+        selectionLineWidth: 1,
+      });
     }
   }, [fabricCanvas]);
 
@@ -79,7 +85,6 @@ export function CanvasWorkspace() {
     setIsPanning(false);
   };
 
-  // Drag and drop image files directly onto canvas
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
@@ -87,26 +92,49 @@ export function CanvasWorkspace() {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (typeof event.target?.result === "string") {
-          const id = `el_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-          const imageEl: ImageElement = {
-            id,
-            name: file.name.replace(/\.[^/.]+$/, ""),
-            type: "image",
-            src: event.target.result,
-            x: 540,
-            y: 540,
-            width: 480,
-            height: 480,
-            aspectRatio: 1,
-            rotation: 0,
-            opacity: 1,
-            zIndex: 0,
-            locked: false,
-            visible: true,
-            flipX: false,
-            flipY: false,
+          const src = event.target.result;
+          const img = new window.Image();
+          img.src = src;
+          img.onload = () => {
+            const nativeW = img.width;
+            const nativeH = img.height;
+
+            const maxW = document.width * 0.8;
+            const maxH = document.height * 0.8;
+
+            let targetW = nativeW;
+            let targetH = nativeH;
+
+            if (targetW > maxW || targetH > maxH) {
+              const scale = Math.min(maxW / nativeW, maxH / nativeH);
+              targetW = nativeW * scale;
+              targetH = nativeH * scale;
+            }
+
+            const x = document.width / 2;
+            const y = document.height / 2;
+
+            const id = `el_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+            const imageEl: ImageElement = {
+              id,
+              name: file.name.replace(/\.[^/.]+$/, ""),
+              type: "image",
+              src,
+              x,
+              y,
+              width: targetW,
+              height: targetH,
+              aspectRatio: nativeW / nativeH,
+              rotation: 0,
+              opacity: 1,
+              zIndex: 0,
+              locked: false,
+              visible: true,
+              flipX: false,
+              flipY: false,
+            };
+            addElement(imageEl);
           };
-          addElement(imageEl);
         }
       };
       reader.readAsDataURL(file);
@@ -116,7 +144,7 @@ export function CanvasWorkspace() {
   const isHandActive = activeTool === "hand" || isSpacePressed;
 
   return (
-    <main
+    <div
       ref={containerRef}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
@@ -124,7 +152,7 @@ export function CanvasWorkspace() {
       onMouseUp={handleMouseUp}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      className={`relative w-full h-[calc(100vh-3.5rem)] overflow-hidden studio-dot-grid flex items-center justify-center select-none ${
+      className={`absolute inset-0 z-0 flex items-center justify-center select-none ${
         isHandActive
           ? isPanning
             ? "cursor-grabbing"
@@ -132,9 +160,6 @@ export function CanvasWorkspace() {
           : "cursor-default"
       }`}
     >
-      {/* Floating Context Toolbar */}
-      <FloatingContextToolbar />
-
       {/* Stage Pan/Zoom Transform Container */}
       <div
         style={{
@@ -151,12 +176,12 @@ export function CanvasWorkspace() {
             height: document.height,
             backgroundColor: document.backgroundColor,
           }}
-          className="canvas-shadow-frame rounded-sm relative overflow-hidden transition-colors"
+          className="shadow-2xl shadow-black/80 rounded-sm relative overflow-hidden transition-colors"
         >
           {/* HTML5 Canvas instance for Fabric.js v6 */}
-          <canvas ref={canvasElRef} />
+          <canvas ref={canvasElRef} id="fabric-canvas" />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
