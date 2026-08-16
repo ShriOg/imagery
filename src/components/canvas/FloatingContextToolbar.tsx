@@ -102,7 +102,11 @@ export function FloatingContextToolbar() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-surface-variant hover:bg-surface-variant-high text-on-surface text-xs font-semibold rounded-full transition-all cursor-pointer"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    (imgEl.brightness || imgEl.contrast || imgEl.saturation || imgEl.blur)
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "bg-surface-variant hover:bg-surface-variant-high text-on-surface"
+                  }`}
                   title="Adjust Image"
                 >
                   <span className="material-symbols-outlined text-[16px]">tune</span>
@@ -113,50 +117,105 @@ export function FloatingContextToolbar() {
                 <Popover.Content
                   side="top"
                   sideOffset={16}
-                  className="z-[60] w-64 p-5 bg-surface-container-highest/95 backdrop-blur-3xl border border-outline-variant/15 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4"
+                  className="z-[60] w-72 p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
                 >
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                  <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Image Adjustments</span>
+                    <button
+                      onClick={() =>
+                        updateElement(
+                          activeElement.id,
+                          { brightness: 0, contrast: 0, saturation: 0, blur: 0 },
+                          true
+                        )
+                      }
+                      className="text-[11px] text-primary hover:underline cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  </div>
+
+                  {/* Brightness */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Brightness</span>
-                      <span>{Math.round((imgEl.brightness || 0) * 100)}</span>
+                      <span className="font-mono">{Math.round((imgEl.brightness || 0) * 100)}%</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.brightness || 0]} min={-1} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { brightness: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[imgEl.brightness || 0]}
+                      min={-1}
+                      max={1}
+                      step={0.01}
+                      onValueChange={([val]) => updateElement(activeElement.id, { brightness: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { brightness: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
                       <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+
+                  {/* Contrast */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Contrast</span>
-                      <span>{Math.round((imgEl.contrast || 0) * 100)}</span>
+                      <span className="font-mono">{Math.round((imgEl.contrast || 0) * 100)}%</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.contrast || 0]} min={-1} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { contrast: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[imgEl.contrast || 0]}
+                      min={-1}
+                      max={1}
+                      step={0.01}
+                      onValueChange={([val]) => updateElement(activeElement.id, { contrast: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { contrast: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
                       <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+
+                  {/* Saturation */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Saturation</span>
-                      <span>{Math.round((imgEl.saturation || 0) * 100)}</span>
+                      <span className="font-mono">{Math.round((imgEl.saturation || 0) * 100)}%</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.saturation || 0]} min={-1} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { saturation: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[imgEl.saturation || 0]}
+                      min={-1}
+                      max={1}
+                      step={0.01}
+                      onValueChange={([val]) => updateElement(activeElement.id, { saturation: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { saturation: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
                       <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+
+                  {/* Blur */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Blur</span>
-                      <span>{Math.round((imgEl.blur || 0) * 100)}</span>
+                      <span className="font-mono">{Math.round((imgEl.blur || 0) * 100)}%</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.blur || 0]} min={0} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { blur: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[imgEl.blur || 0]}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      onValueChange={([val]) => updateElement(activeElement.id, { blur: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { blur: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
@@ -292,86 +351,191 @@ export function FloatingContextToolbar() {
           <Popover.Trigger asChild>
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="flex items-center gap-1.5 cursor-pointer group px-2 py-1 rounded-xl hover:bg-surface-variant/50 transition-colors"
+              className={`flex items-center gap-1.5 cursor-pointer group px-2 py-1 rounded-xl transition-colors ${
+                activeElement.shadowEnabled
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "hover:bg-surface-variant/50 text-on-surface-variant group-hover:text-primary"
+              }`}
               title="Shadow & Border Settings"
             >
-              <span className={`material-symbols-outlined text-[18px] transition-colors ${activeElement.shadowEnabled ? "text-primary" : "text-on-surface-variant group-hover:text-primary"}`}>
-                style
-              </span>
+              <span className="material-symbols-outlined text-[18px]">style</span>
             </motion.div>
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content
               side="top"
               sideOffset={16}
-              className="z-[60] w-64 p-5 bg-surface-container-highest/95 backdrop-blur-3xl border border-outline-variant/15 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4"
+              className="z-[60] w-72 p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] font-semibold text-on-surface">Drop Shadow</span>
-                <button 
-                  onClick={() => updateElement(activeElement.id, { shadowEnabled: !activeElement.shadowEnabled }, true)}
-                  className={`relative w-8 h-4 rounded-full transition-colors cursor-pointer ${activeElement.shadowEnabled ? "bg-primary" : "bg-surface-variant"}`}
+              <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Drop Shadow</span>
+                <button
+                  onClick={() =>
+                    updateElement(
+                      activeElement.id,
+                      {
+                        shadowEnabled: !activeElement.shadowEnabled,
+                        shadowBlur: activeElement.shadowBlur ?? 20,
+                        shadowOffsetX: activeElement.shadowOffsetX ?? 8,
+                        shadowOffsetY: activeElement.shadowOffsetY ?? 8,
+                        shadowColor: activeElement.shadowColor ?? "rgba(0, 0, 0, 0.8)",
+                      },
+                      true
+                    )
+                  }
+                  className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${
+                    activeElement.shadowEnabled ? "bg-primary" : "bg-surface-variant"
+                  }`}
                 >
-                  <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-surface-container-highest transition-all shadow-sm ${activeElement.shadowEnabled ? "left-4.5" : "left-0.5"}`} />
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-surface-container-highest transition-all shadow-md ${
+                      activeElement.shadowEnabled ? "left-4.5 bg-on-primary" : "left-0.5"
+                    }`}
+                  />
                 </button>
               </div>
 
               {activeElement.shadowEnabled && (
                 <>
+                  {/* Shadow Color & Presets */}
                   <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-on-surface-variant">
+                      <span>Shadow Color</span>
+                      <span className="font-mono text-[10px] text-on-surface opacity-75">
+                        {activeElement.shadowColor || "#000000"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-outline-variant/30 shadow-inner flex items-center justify-center shrink-0">
+                        <input
+                          type="color"
+                          value={
+                            activeElement.shadowColor?.startsWith("#")
+                              ? activeElement.shadowColor
+                              : "#000000"
+                          }
+                          onChange={(e) =>
+                            updateElement(activeElement.id, { shadowColor: e.target.value }, true)
+                          }
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: activeElement.shadowColor || "rgba(0,0,0,0.8)" }}
+                        />
+                      </div>
+
+                      {/* Quick Palette Presets */}
+                      <div className="flex items-center gap-1.5 grow">
+                        {[
+                          { label: "Dark", color: "rgba(0, 0, 0, 0.85)" },
+                          { label: "Amber", color: "rgba(255, 226, 171, 0.8)" },
+                          { label: "Red", color: "rgba(239, 68, 68, 0.8)" },
+                          { label: "White", color: "rgba(255, 255, 255, 0.8)" },
+                          { label: "Purple", color: "rgba(168, 85, 247, 0.8)" },
+                        ].map((p) => (
+                          <button
+                            key={p.label}
+                            onClick={() => updateElement(activeElement.id, { shadowColor: p.color }, true)}
+                            title={p.label}
+                            className="w-5 h-5 rounded-md border border-white/10 transition-transform hover:scale-110 cursor-pointer shadow-sm"
+                            style={{ backgroundColor: p.color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Blur Slider */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Blur</span>
-                      <span>{activeElement.shadowBlur || 0}px</span>
+                      <span className="font-mono">{activeElement.shadowBlur ?? 20}px</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[activeElement.shadowBlur || 0]} min={0} max={50} step={1} onValueChange={([val]) => updateElement(activeElement.id, { shadowBlur: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[activeElement.shadowBlur ?? 20]}
+                      min={0}
+                      max={50}
+                      step={1}
+                      onValueChange={([val]) => updateElement(activeElement.id, { shadowBlur: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { shadowBlur: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
-                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                  {/* X Offset Slider */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>X Offset</span>
-                      <span>{activeElement.shadowOffsetX || 0}px</span>
+                      <span className="font-mono">{activeElement.shadowOffsetX ?? 8}px</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[activeElement.shadowOffsetX || 0]} min={-30} max={30} step={1} onValueChange={([val]) => updateElement(activeElement.id, { shadowOffsetX: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[activeElement.shadowOffsetX ?? 8]}
+                      min={-30}
+                      max={30}
+                      step={1}
+                      onValueChange={([val]) => updateElement(activeElement.id, { shadowOffsetX: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { shadowOffsetX: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
-                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                  {/* Y Offset Slider */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Y Offset</span>
-                      <span>{activeElement.shadowOffsetY || 0}px</span>
+                      <span className="font-mono">{activeElement.shadowOffsetY ?? 8}px</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[activeElement.shadowOffsetY || 0]} min={-30} max={30} step={1} onValueChange={([val]) => updateElement(activeElement.id, { shadowOffsetY: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[activeElement.shadowOffsetY ?? 8]}
+                      min={-30}
+                      max={30}
+                      step={1}
+                      onValueChange={([val]) => updateElement(activeElement.id, { shadowOffsetY: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { shadowOffsetY: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
-                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
                 </>
               )}
 
-              {((isShape && shapeEl.shapeKind === "rectangle")) && (
+              {isShape && shapeEl.shapeKind === "rectangle" && (
                 <>
-                  <div className="h-px bg-surface-variant my-1" />
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                  <div className="h-px bg-outline-variant/15 my-1" />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                       <span>Corner Radius</span>
-                      <span>{shapeEl.cornerRadius || 0}px</span>
+                      <span className="font-mono">{shapeEl.cornerRadius || 0}px</span>
                     </div>
-                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[shapeEl.cornerRadius || 0]} min={0} max={100} step={1} onValueChange={([val]) => updateElement(activeElement.id, { cornerRadius: val }, true)}>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[shapeEl.cornerRadius || 0]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={([val]) => updateElement(activeElement.id, { cornerRadius: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { cornerRadius: val }, true)}
+                    >
                       <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
                         <Slider.Range className="absolute bg-primary rounded-full h-full" />
                       </Slider.Track>
-                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
                 </>

@@ -91,12 +91,14 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
       cornerStyle: "circle" as const,
       padding: 6,
       borderScaleFactor: 1.5,
-      shadow: el.shadowEnabled ? new fabric.Shadow({
-        color: el.shadowColor || 'rgba(0,0,0,0.5)',
-        blur: el.shadowBlur || 10,
-        offsetX: el.shadowOffsetX || 5,
-        offsetY: el.shadowOffsetY || 5,
-      }) : undefined,
+      shadow: el.shadowEnabled
+        ? new fabric.Shadow({
+            color: el.shadowColor || "rgba(0, 0, 0, 0.75)",
+            blur: typeof el.shadowBlur === "number" ? el.shadowBlur : 15,
+            offsetX: typeof el.shadowOffsetX === "number" ? el.shadowOffsetX : 5,
+            offsetY: typeof el.shadowOffsetY === "number" ? el.shadowOffsetY : 5,
+          })
+        : undefined,
     };
 
     let obj: fabric.FabricObject | null = null;
@@ -327,12 +329,14 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
         const existing = existingMap.get(el.id);
 
         if (existing) {
-          const shadow = el.shadowEnabled ? new fabric.Shadow({
-            color: el.shadowColor || 'rgba(0,0,0,0.5)',
-            blur: el.shadowBlur || 10,
-            offsetX: el.shadowOffsetX || 5,
-            offsetY: el.shadowOffsetY || 5,
-          }) : null;
+          const shadow = el.shadowEnabled
+            ? new fabric.Shadow({
+                color: el.shadowColor || "rgba(0, 0, 0, 0.75)",
+                blur: typeof el.shadowBlur === "number" ? el.shadowBlur : 15,
+                offsetX: typeof el.shadowOffsetX === "number" ? el.shadowOffsetX : 5,
+                offsetY: typeof el.shadowOffsetY === "number" ? el.shadowOffsetY : 5,
+              })
+            : null;
 
           existing.set({
             left: el.x,
@@ -344,6 +348,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
             evented: !el.locked && el.visible,
             shadow,
           });
+          existing.dirty = true;
 
           if (el.type === "text" && existing.type === "textbox") {
             const textEl = el as TextElement;
@@ -360,6 +365,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
               fontStyle: textEl.italic ? "italic" : "normal",
               width: textEl.width,
             });
+            existing.dirty = true;
           } else if (el.type === "shape") {
             const shapeEl = el as ShapeElement;
             const strokeDashArray = shapeEl.strokeStyle === "dashed" ? [6, 6] : undefined;
@@ -375,6 +381,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                 ry: shapeEl.cornerRadius || 0,
               });
             }
+            existing.dirty = true;
           } else if (el.type === "image" && existing.type === "image") {
             const imgEl = el as ImageElement;
             const img = existing as fabric.FabricImage;
@@ -399,6 +406,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                   lockUniScaling: true,
                   originX: "center",
                   originY: "center",
+                  shadow,
                 });
                 (newImg as any).data = { id: el.id, src: imgEl.src };
                 newImg.setControlsVisibility({
@@ -425,13 +433,24 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                 syncCanvasZIndex(canvas, elements);
 
                 const filters: any[] = [];
-                if (imgEl.brightness) filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
-                if (imgEl.contrast) filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
-                if (imgEl.saturation) filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
-                if (imgEl.blur) filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
-                if (imgEl.grayscale) filters.push(new fabric.filters.Grayscale());
+                if (typeof imgEl.brightness === "number" && imgEl.brightness !== 0) {
+                  filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
+                }
+                if (typeof imgEl.contrast === "number" && imgEl.contrast !== 0) {
+                  filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
+                }
+                if (typeof imgEl.saturation === "number" && imgEl.saturation !== 0) {
+                  filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
+                }
+                if (typeof imgEl.blur === "number" && imgEl.blur !== 0) {
+                  filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
+                }
+                if (imgEl.grayscale) {
+                  filters.push(new fabric.filters.Grayscale());
+                }
                 newImg.filters = filters;
                 newImg.applyFilters();
+                newImg.dirty = true;
 
                 canvas.requestRenderAll();
               });
@@ -444,17 +463,29 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                 flipX: imgEl.flipX || false,
                 flipY: imgEl.flipY || false,
                 lockUniScaling: true,
+                shadow,
               });
 
               const filters: any[] = [];
-              if (imgEl.brightness) filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
-              if (imgEl.contrast) filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
-              if (imgEl.saturation) filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
-              if (imgEl.blur) filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
-              if (imgEl.grayscale) filters.push(new fabric.filters.Grayscale());
+              if (typeof imgEl.brightness === "number" && imgEl.brightness !== 0) {
+                filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
+              }
+              if (typeof imgEl.contrast === "number" && imgEl.contrast !== 0) {
+                filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
+              }
+              if (typeof imgEl.saturation === "number" && imgEl.saturation !== 0) {
+                filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
+              }
+              if (typeof imgEl.blur === "number" && imgEl.blur !== 0) {
+                filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
+              }
+              if (imgEl.grayscale) {
+                filters.push(new fabric.filters.Grayscale());
+              }
               
               img.filters = filters;
               img.applyFilters();
+              existing.dirty = true;
             }
           }
         } else {
