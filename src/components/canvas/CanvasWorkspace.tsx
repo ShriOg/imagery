@@ -70,23 +70,38 @@ export function CanvasWorkspace() {
     }
   }, [fabricCanvas]);
 
-  // Smooth mouse wheel zoom / pan
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
+  // Smooth mouse wheel zoom / pan (non-passive listener to prevent native browser zoom)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleNativeWheel = (e: WheelEvent) => {
+      // Prevent browser's native zoom or back/forward navigation
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        e.preventDefault();
+      }
+
       if (e.ctrlKey || e.metaKey) {
+        // Zooming
+        const delta = e.deltaY < 0 ? 0.08 : -0.08;
+        setZoom((prev) => Math.min(3.0, Math.max(0.15, Number((prev + delta).toFixed(2)))));
+      } else if (e.altKey) {
+         // Alt+Scroll also zooms for Photoshop users
         e.preventDefault();
         const delta = e.deltaY < 0 ? 0.08 : -0.08;
         setZoom((prev) => Math.min(3.0, Math.max(0.15, Number((prev + delta).toFixed(2)))));
       } else {
-        // Trackpad two-finger pan
+        // Trackpad two-finger pan or regular scroll wheel panning
         setPan((prev) => ({
           x: prev.x - e.deltaX * 0.8,
           y: prev.y - e.deltaY * 0.8,
         }));
       }
-    },
-    [setZoom, setPan]
-  );
+    };
+
+    container.addEventListener("wheel", handleNativeWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleNativeWheel);
+  }, [setZoom, setPan]);
 
   // Panning mouse handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -174,7 +189,6 @@ export function CanvasWorkspace() {
   return (
     <div
       ref={containerRef}
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
