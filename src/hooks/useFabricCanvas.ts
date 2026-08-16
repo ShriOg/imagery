@@ -57,15 +57,18 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
   const drawGuide = useCallback((x1: number, y1: number, x2: number, y2: number) => {
     if (!fabricRef.current) return;
     const guide = new fabric.Line([x1, y1, x2, y2], {
-      stroke: "#F59E0B",
-      strokeWidth: 1,
-      strokeDashArray: [4, 4],
+      stroke: "#fbbc00",
+      strokeWidth: 1.2,
+      strokeDashArray: [5, 5],
       selectable: false,
       evented: false,
-      opacity: 0.85,
+      opacity: 0.9,
+      excludeFromExport: true,
     });
+    (guide as any).isGuide = true;
     guideLinesRef.current.push(guide);
     fabricRef.current.add(guide);
+    fabricRef.current.bringObjectToFront(guide);
   }, []);
 
   // Fabric Object factory
@@ -519,7 +522,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
       }
     });
 
-    // Moving Smart Alignment Guides
+    // Moving Smart Alignment Guides (Figma-grade multi-object & canvas snapping)
     canvas.on("object:moving", (e) => {
       clearGuides();
       const target = e.target;
@@ -527,24 +530,161 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
 
       const docW = document.width;
       const docH = document.height;
-      const centerX = docW / 2;
-      const centerY = docH / 2;
-
-      const objX = target.left || 0;
-      const objY = target.top || 0;
       const threshold = 6;
 
-      // Snap to Center X
-      if (Math.abs(objX - centerX) < threshold) {
-        target.set({ left: centerX });
-        drawGuide(centerX, 0, centerX, docH);
+      const targetW = target.getScaledWidth();
+      const targetH = target.getScaledHeight();
+      let targetX = target.left || 0;
+      let targetY = target.top || 0;
+
+      const targetLeft = targetX - targetW / 2;
+      const targetRight = targetX + targetW / 2;
+      const targetTop = targetY - targetH / 2;
+      const targetBottom = targetY + targetH / 2;
+
+      // Candidate objects to align against
+      const targetId = (target as any).data?.id;
+      const otherObjects = canvas.getObjects().filter((obj) => {
+        return (
+          !(obj as any).isGuide &&
+          (obj as any).data?.id &&
+          (obj as any).data?.id !== targetId &&
+          obj.visible
+        );
+      });
+
+      let snappedX = false;
+      let snappedY = false;
+
+      // 1. Canvas Center Snapping
+      const canvasCenterX = docW / 2;
+      const canvasCenterY = docH / 2;
+
+      if (Math.abs(targetX - canvasCenterX) < threshold) {
+        target.set({ left: canvasCenterX });
+        targetX = canvasCenterX;
+        snappedX = true;
+        drawGuide(canvasCenterX, 0, canvasCenterX, docH);
       }
 
-      // Snap to Center Y
-      if (Math.abs(objY - centerY) < threshold) {
-        target.set({ top: centerY });
-        drawGuide(0, centerY, docW, centerY);
+      if (Math.abs(targetY - canvasCenterY) < threshold) {
+        target.set({ top: canvasCenterY });
+        targetY = canvasCenterY;
+        snappedY = true;
+        drawGuide(0, canvasCenterY, docW, canvasCenterY);
       }
+
+      // 2. Canvas Outer Boundary / Margin Snapping
+      if (!snappedX) {
+        if (Math.abs(targetLeft - 0) < threshold) {
+          target.set({ left: targetW / 2 });
+          snappedX = true;
+          drawGuide(0, 0, 0, docH);
+        } else if (Math.abs(targetRight - docW) < threshold) {
+          target.set({ left: docW - targetW / 2 });
+          snappedX = true;
+          drawGuide(docW, 0, docW, docH);
+        }
+      }
+
+      if (!snappedY) {
+        if (Math.abs(targetTop - 0) < threshold) {
+          target.set({ top: targetH / 2 });
+          snappedY = true;
+          drawGuide(0, 0, docW, 0);
+        } else if (Math.abs(targetBottom - docH) < threshold) {
+          target.set({ top: docH - targetH / 2 });
+          snappedY = true;
+          drawGuide(0, docH, docW, docH);
+        }
+      }
+
+      // 3. Inter-Object Alignment Snapping
+      for (const other of otherObjects) {
+        const otherW = other.getScaledWidth();
+        const otherH = other.getScaledHeight();
+        const otherX = other.left || 0;
+        const otherY = other.top || 0;
+        const otherLeft = otherX - otherW / 2;
+        const otherRight = otherX + otherW / 2;
+        const otherTop = otherY - otherH / 2;
+        const otherBottom = otherY + otherH / 2;
+
+        // X-Axis Alignment Checks (Draw vertical guide line)
+        if (!snappedX) {
+          // Center to Center
+          if (Math.abs(targetX - otherX) < threshold) {
+            target.set({ left: otherX });
+            snappedX = true;
+            drawGuide(otherX, 0, otherX, docH);
+          }
+          // Left to Left
+          else if (Math.abs(targetLeft - otherLeft) < threshold) {
+            target.set({ left: otherLeft + targetW / 2 });
+            snappedX = true;
+            drawGuide(otherLeft, 0, otherLeft, docH);
+          }
+          // Right to Right
+          else if (Math.abs(targetRight - otherRight) < threshold) {
+            target.set({ left: otherRight - targetW / 2 });
+            snappedX = true;
+            drawGuide(otherRight, 0, otherRight, docH);
+          }
+          // Left to Right
+          else if (Math.abs(targetLeft - otherRight) < threshold) {
+            target.set({ left: otherRight + targetW / 2 });
+            snappedX = true;
+            drawGuide(otherRight, 0, otherRight, docH);
+          }
+          // Right to Left
+          else if (Math.abs(targetRight - otherLeft) < threshold) {
+            target.set({ left: otherLeft - targetW / 2 });
+            snappedX = true;
+            drawGuide(otherLeft, 0, otherLeft, docH);
+          }
+        }
+
+        // Y-Axis Alignment Checks (Draw horizontal guide line)
+        if (!snappedY) {
+          // Center to Center
+          if (Math.abs(targetY - otherY) < threshold) {
+            target.set({ top: otherY });
+            snappedY = true;
+            drawGuide(0, otherY, docW, otherY);
+          }
+          // Top to Top
+          else if (Math.abs(targetTop - otherTop) < threshold) {
+            target.set({ top: otherTop + targetH / 2 });
+            snappedY = true;
+            drawGuide(0, otherTop, docW, otherTop);
+          }
+          // Bottom to Bottom
+          else if (Math.abs(targetBottom - otherBottom) < threshold) {
+            target.set({ top: otherBottom - targetH / 2 });
+            snappedY = true;
+            drawGuide(0, otherBottom, docW, otherBottom);
+          }
+          // Top to Bottom
+          else if (Math.abs(targetTop - otherBottom) < threshold) {
+            target.set({ top: otherBottom + targetH / 2 });
+            snappedY = true;
+            drawGuide(0, otherBottom, docW, otherBottom);
+          }
+          // Bottom to Top
+          else if (Math.abs(targetBottom - otherTop) < threshold) {
+            target.set({ top: otherTop - targetH / 2 });
+            snappedY = true;
+            drawGuide(0, otherTop, docW, otherTop);
+          }
+        }
+
+        if (snappedX && snappedY) break;
+      }
+    });
+
+    // Clear guides on mouse release
+    canvas.on("mouse:up", () => {
+      clearGuides();
     });
 
     // Tool click insertion on canvas stage
