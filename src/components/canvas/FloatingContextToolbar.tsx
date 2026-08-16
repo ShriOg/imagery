@@ -31,7 +31,7 @@ export function FloatingContextToolbar() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 450, damping: 28 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-5 px-7 py-3.5 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-outline-variant/15 z-30 select-none"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-5 px-7 py-3.5 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.75)] border border-outline-variant/15 z-40 select-none"
         >
           <span className="font-body-md text-xs sm:text-sm font-medium text-on-surface">
             {selectedIds.length} Items Selected
@@ -99,7 +99,7 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 24, scale: 0.9 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-5 px-6 sm:px-7 py-3 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.04)] border border-outline-variant/15 z-30 select-none max-w-[95vw] overflow-x-auto scrollbar-none"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-5 px-6 sm:px-7 py-3 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.04)] border border-outline-variant/15 z-40 select-none max-w-[95vw] overflow-x-auto scrollbar-none"
     >
         {/* IMAGE SPECIFIC: Crop & Flip */}
         {isImage && (
