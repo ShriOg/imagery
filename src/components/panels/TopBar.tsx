@@ -136,28 +136,32 @@ export function TopBar() {
 
         {/* Right: AI Palette, Actions, Zoom, Export, Search, Notifications, Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* AI Command Palette Trigger (Glowing ✨) */}
+          {/* AI Command Palette Trigger */}
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setAiPaletteOpen(true)}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-amber-500/15 text-primary border border-primary/35 rounded-full font-semibold text-xs shadow-[0_0_20px_rgba(251,188,0,0.18)] hover:border-primary/70 transition-all cursor-pointer"
+            className="ai-shimmer-overlay animate-glow-pulse flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-amber-500/15 text-primary border border-primary/35 rounded-full font-semibold text-xs shadow-[0_0_20px_rgba(251,188,0,0.18)] hover:border-primary/70 hover:shadow-[0_0_28px_rgba(251,188,0,0.3)] transition-all cursor-pointer"
             title="Open AI Command Palette (Cmd+K)"
           >
-            <span className="material-symbols-outlined text-[16px] text-primary animate-pulse">auto_awesome</span>
+            <motion.span
+              className="material-symbols-outlined text-[16px] text-primary"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+              transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
+            >auto_awesome</motion.span>
             <span className="hidden sm:inline">Ask AI</span>
             <span className="text-[10px] font-mono opacity-60 bg-surface-container px-1.5 py-0.5 rounded ml-0.5">⌘K</span>
           </motion.button>
 
           {/* AI Audit Log Toggle */}
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.08, rotate: 15 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => {
               const { isOpen, setIsOpen } = require("@/store/useAILogStore").useAILogStore.getState();
               setIsOpen(!isOpen);
             }}
-            className="flex items-center justify-center p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors cursor-pointer"
+            className="flex items-center justify-center p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-full transition-colors cursor-pointer"
             title="View AI Audit Log"
           >
             <span className="material-symbols-outlined text-[18px]">history_edu</span>
