@@ -238,21 +238,6 @@ export function TopBar() {
           </motion.button>
 
           <div className="w-px h-5 bg-outline-variant/20 hidden md:block"></div>
-
-          {/* Search & Notifications & Profile */}
-          <div className="flex items-center gap-1.5">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex cursor-pointer">
-              <span className="material-symbols-outlined text-[20px]">search</span>
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex cursor-pointer">
-              <span className="material-symbols-outlined text-[20px]">notifications</span>
-            </motion.button>
-            <img
-              alt="Profile"
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed-dim/20 ml-1"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_d_iY_ZcmsZaivAKpm_unHS0JFH0vHQuZpWn8MKQbJtdx6ruoy8vM2W0X8eUrgHC4UE2tTAIafaiuGDzmZxSGVv99e6reXIUYvZGfFflaLm-tKYym8zlHQgqY5CkLntetpIFVOW8ajuS0bkN0TkJabvSoB6JiAhdt3zZLtjMI_9cQayibnIxZ3RSvcohBdAGFN-GmdMsLyfUtJZTn-W7vJiqIKTwaS-jOhfoKiIzXbkMXtSusa5Ah"
-            />
-          </div>
         </div>
       </header>
 

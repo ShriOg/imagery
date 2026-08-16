@@ -138,66 +138,60 @@ export const useCanvasStore = create<CanvasStoreState>()(
       state.selectedIds = [];
     }),
 
-    addElement: (element) => set((state) => {
+    addElement: (element) => {
       get().commitHistory();
-      const maxZ = state.document.elements.reduce((max, el) => Math.max(max, el.zIndex), 0);
-      element.zIndex = maxZ + 1;
-      if (!element.name) {
-        element.name = `${element.type.charAt(0).toUpperCase() + element.type.slice(1)} ${state.document.elements.length + 1}`;
-      }
-      state.document.elements.push(element);
-      state.selectedIds = [element.id];
-    }),
+      set((state) => {
+        const maxZ = state.document.elements.reduce((max, el) => Math.max(max, el.zIndex), 0);
+        element.zIndex = maxZ + 1;
+        if (!element.name) {
+          element.name = `${element.type.charAt(0).toUpperCase() + element.type.slice(1)} ${state.document.elements.length + 1}`;
+        }
+        state.document.elements.push(element);
+        state.selectedIds = [element.id];
+      });
+    },
 
-    updateElement: (id, updates, recordHistory = false) => set((state) => {
+    updateElement: (id, updates, recordHistory = false) => {
       if (recordHistory) {
         get().commitHistory();
       }
-      const el = state.document.elements.find(e => e.id === id);
-      if (el) {
-        Object.assign(el, updates);
-      }
-    }),
-
-    updateElements: (updates, recordHistory = false) => set((state) => {
-      if (recordHistory) {
-        get().commitHistory();
-      }
-      updates.forEach(({ id, changes }) => {
+      set((state) => {
         const el = state.document.elements.find(e => e.id === id);
         if (el) {
-          Object.assign(el, changes);
+          Object.assign(el, updates);
         }
       });
-    }),
+    },
 
-    removeElement: (id) => set((state) => {
-      get().commitHistory();
-      const el = state.document.elements.find(e => e.id === id);
-      const typeStr = el ? el.type.charAt(0).toUpperCase() + el.type.slice(1) : "Element";
-      state.document.elements = state.document.elements.filter(e => e.id !== id);
-      state.selectedIds = state.selectedIds.filter(selectedId => selectedId !== id);
-      
-      useToastStore.getState().addToast(`${typeStr} deleted`, {
-        label: "Undo",
-        onClick: () => get().undo()
+    updateElements: (updates, recordHistory = false) => {
+      if (recordHistory) {
+        get().commitHistory();
+      }
+      set((state) => {
+        updates.forEach(({ id, changes }) => {
+          const el = state.document.elements.find(e => e.id === id);
+          if (el) {
+            Object.assign(el, changes);
+          }
+        });
       });
-    }),
+    },
 
-    removeSelected: () => set((state) => {
-      if (state.selectedIds.length === 0) return;
+    removeElement: (id) => {
       get().commitHistory();
-      
-      const toRemove = new Set(state.selectedIds);
-      const typeStr = state.selectedIds.length === 1 
-        ? (state.document.elements.find(e => e.id === state.selectedIds[0])?.type || "element") 
-        : `${state.selectedIds.length} items`;
+      set((state) => {
+        const el = state.document.elements.find(e => e.id === id);
+        const typeStr = el ? el.type.charAt(0).toUpperCase() + el.type.slice(1) : "Element";
+        state.document.elements = state.document.elements.filter(e => e.id !== id);
+        state.selectedIds = state.selectedIds.filter(selectedId => selectedId !== id);
         
-      const formattedType = typeof typeStr === "string" ? typeStr.charAt(0).toUpperCase() + typeStr.slice(1) : typeStr;
-      
-      state.document.elements = state.document.elements.filter(e => !toRemove.has(e.id));
-      state.selectedIds = [];
-      
+        useToastStore.getState().addToast(`${typeStr} deleted`, {
+          label: "Undo",
+          onClick: () => get().undo()
+        });
+      });
+    },
+    removeSelected: () => {
       useToastStore.getState().addToast(`${formattedType} deleted`, {
         label: "Undo",
         onClick: () => get().undo()

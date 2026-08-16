@@ -296,41 +296,41 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
             switch (imgEl.gradePreset) {
               case "golden-hour":
                 matrix = [
-                  1.1, 0.1, 0.0, 0, 20,
-                  0.0, 1.1, 0.0, 0, 10,
-                  0.0, 0.0, 0.9, 0, -10,
+                  1.1, 0.1, 0.0, 0, 20/255,
+                  0.0, 1.1, 0.0, 0, 10/255,
+                  0.0, 0.0, 0.9, 0, -10/255,
                   0,   0,   0,   1, 0
                 ];
                 break;
               case "90s-camcorder":
                 matrix = [
-                  1.3, 0.0, 0.0, 0, -20,
-                  0.0, 1.4, 0.0, 0, 10,
-                  0.0, 0.0, 1.2, 0, -30,
+                  1.3, 0.0, 0.0, 0, -20/255,
+                  0.0, 1.4, 0.0, 0, 10/255,
+                  0.0, 0.0, 1.2, 0, -30/255,
                   0,   0,   0,   1, 0
                 ];
                 break;
               case "cinematic-muted":
                 matrix = [
-                  0.8, 0.1, 0.1, 0, -15,
-                  0.1, 0.9, 0.1, 0, 10,
-                  0.1, 0.1, 1.1, 0, 20,
+                  0.8, 0.1, 0.1, 0, -15/255,
+                  0.1, 0.9, 0.1, 0, 10/255,
+                  0.1, 0.1, 1.1, 0, 20/255,
                   0,   0,   0,   1, 0
                 ];
                 break;
               case "vintage-fade":
                 matrix = [
-                  1.0, 0.0, 0.0, 0, 40,
-                  0.0, 0.9, 0.0, 0, 20,
-                  0.0, 0.0, 0.8, 0, 30,
+                  1.0, 0.0, 0.0, 0, 40/255,
+                  0.0, 0.9, 0.0, 0, 20/255,
+                  0.0, 0.0, 0.8, 0, 30/255,
                   0,   0,   0,   1, 0
                 ];
                 break;
               case "monochrome-noir":
                 matrix = [
-                  0.6, 0.6, 0.6, 0, -40,
-                  0.6, 0.6, 0.6, 0, -40,
-                  0.6, 0.6, 0.6, 0, -40,
+                  0.6, 0.6, 0.6, 0, -40/255,
+                  0.6, 0.6, 0.6, 0, -40/255,
+                  0.6, 0.6, 0.6, 0, -40/255,
                   0,   0,   0,   1, 0
                 ];
                 break;
@@ -596,11 +596,11 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
               if (imgEl.gradePreset && imgEl.gradePreset !== "none") {
                 let matrix: number[] | null = null;
                 switch (imgEl.gradePreset) {
-                  case "golden-hour": matrix = [1.1, 0.1, 0.0, 0, 20, 0.0, 1.1, 0.0, 0, 10, 0.0, 0.0, 0.9, 0, -10, 0, 0, 0, 1, 0]; break;
-                  case "90s-camcorder": matrix = [1.3, 0.0, 0.0, 0, -20, 0.0, 1.4, 0.0, 0, 10, 0.0, 0.0, 1.2, 0, -30, 0, 0, 0, 1, 0]; break;
-                  case "cinematic-muted": matrix = [0.8, 0.1, 0.1, 0, -15, 0.1, 0.9, 0.1, 0, 10, 0.1, 0.1, 1.1, 0, 20, 0, 0, 0, 1, 0]; break;
-                  case "vintage-fade": matrix = [1.0, 0.0, 0.0, 0, 40, 0.0, 0.9, 0.0, 0, 20, 0.0, 0.0, 0.8, 0, 30, 0, 0, 0, 1, 0]; break;
-                  case "monochrome-noir": matrix = [0.6, 0.6, 0.6, 0, -40, 0.6, 0.6, 0.6, 0, -40, 0.6, 0.6, 0.6, 0, -40, 0, 0, 0, 1, 0]; break;
+                  case "golden-hour": matrix = [1.1, 0.1, 0.0, 0, 20/255, 0.0, 1.1, 0.0, 0, 10/255, 0.0, 0.0, 0.9, 0, -10/255, 0, 0, 0, 1, 0]; break;
+                  case "90s-camcorder": matrix = [1.3, 0.0, 0.0, 0, -20/255, 0.0, 1.4, 0.0, 0, 10/255, 0.0, 0.0, 1.2, 0, -30/255, 0, 0, 0, 1, 0]; break;
+                  case "cinematic-muted": matrix = [0.8, 0.1, 0.1, 0, -15/255, 0.1, 0.9, 0.1, 0, 10/255, 0.1, 0.1, 1.1, 0, 20/255, 0, 0, 0, 1, 0]; break;
+                  case "vintage-fade": matrix = [1.0, 0.0, 0.0, 0, 40/255, 0.0, 0.9, 0.0, 0, 20/255, 0.0, 0.0, 0.8, 0, 30/255, 0, 0, 0, 1, 0]; break;
+                  case "monochrome-noir": matrix = [0.6, 0.6, 0.6, 0, -40/255, 0.6, 0.6, 0.6, 0, -40/255, 0.6, 0.6, 0.6, 0, -40/255, 0, 0, 0, 1, 0]; break;
                 }
                 if (matrix) filters.push(new fabric.filters.ColorMatrix({ matrix }));
               }

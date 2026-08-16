@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎨 Imagery
 
-## Getting Started
+> **A simple, modern image editor built for everyday creativity.**
 
-First, run the development server:
+Imagery is a browser-based image editor built around one idea:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Powerful editing doesn't have to feel complicated.**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+We focused on creating an editor that is clean, approachable, and packed with the tools you actually need — without making the interface look like a spaceship cockpit. 🚀
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✦ Why Imagery?
 
-## Learn More
+Image editors can be incredibly powerful, but that power often comes with complexity.
 
-To learn more about Next.js, take a look at the following resources:
+**Imagery takes a different approach:** keep the interface clean, make the controls intuitive, and let users start creating without having to learn the entire application first.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### What You Can Do
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 🎯 **Select & Pan** — Navigate and work with your canvas effortlessly.
+- ✍️ **Text Editing** — Customize fonts, colors, size, opacity, orientation, and positioning.
+- 🧩 **Objects & Elements** — Add and arrange different visual elements.
+- 🖼️ **Stock Images** — Bring images directly into your designs.
+- 📚 **Layer Management** — Organize, rearrange, and control your elements.
+- ✨ **AI Assistant** — Describe what you want in natural language and let AI assist your workflow.
+- ⚡ **Contextual Controls** — Access the tools you need without digging through endless menus.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎨 What Makes Imagery Different?
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 1. Simple by Design
+
+We didn't try to build an editor with the **most buttons**.
+
+We tried to build one with the **right buttons**.
+
+The interface stays minimal and focused, making everyday editing quick and approachable.
+
+### 2. Made to Be Understood
+
+Everything is designed around a straightforward workflow:
+
+**Open → Create → Edit → Export**
+
+No complicated learning curve.  
+No hunting through five different menus just to change a font.
+
+### 3. AI-Assisted Creativity
+
+Imagery introduces an AI-powered workflow where users can describe changes using natural language, making editing feel more conversational and accessible.
+
+---
+
+## 🛠️ Built With
+
+| Technology | Purpose |
+|---|---|
+| **Next.js** | Application framework |
+| **React** | UI and component architecture |
+| **TypeScript** | Type-safe development |
+| **Fabric.js** | Interactive canvas editing |
+| **Tailwind CSS** | Styling and responsive UI |
+| **Framer Motion** | Animations and interactions |
+| **Zustand** | Application state management |
+| **Radix UI** | Accessible UI primitives |
+| **Lucide React** | Interface icons |
+
+---
+
+## 🧩 Project Structure
+
+```text
+src/
+├── app/
+│   ├── api/
+│   │   └── ai/              # AI editing endpoints
+│   ├── editor/              # Editor route
+│   └── page.tsx             # Landing page
+│
+├── components/
+│   ├── ai-panel/            # AI Assistant
+│   ├── canvas/              # Canvas & editing workspace
+│   └── modals/              # Menus, palettes & dialogs
+│
+└── lib/                     # Shared logic & application state
