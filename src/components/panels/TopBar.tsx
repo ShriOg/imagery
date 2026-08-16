@@ -10,6 +10,13 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 const ZOOM_PRESETS = [0.25, 0.5, 0.68, 0.75, 1.0, 1.25, 1.5, 2.0];
 
+const ARTBOARD_PRESETS = [
+  { label: "Square", width: 1080, height: 1080 },
+  { label: "Story", width: 1080, height: 1920 },
+  { label: "Landscape", width: 1920, height: 1080 },
+  { label: "Banner", width: 1200, height: 630 },
+];
+
 export function TopBar() {
   const document = useCanvasStore((s) => s.document);
   const updateDocumentProps = useCanvasStore((s) => s.updateDocumentProps);
@@ -70,6 +77,48 @@ export function TopBar() {
               />
             </div>
           </div>
+          
+          <div className="w-px h-5 bg-outline-variant/20 mx-1 hidden sm:block"></div>
+
+          {/* Artboard Dimensions Dropdown */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/60 px-2.5 py-1.5 rounded-xl border border-outline-variant/10 transition-colors outline-none cursor-pointer hidden md:flex"
+              >
+                <span className="material-symbols-outlined text-[16px]">crop_free</span>
+                <span>{document.width} × {document.height}</span>
+              </motion.button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                sideOffset={8}
+                className="z-50 w-52 p-2 bg-surface-container-high/95 backdrop-blur-2xl border border-outline-variant/20 rounded-2xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-1"
+              >
+                <div className="px-3 py-1.5 text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">
+                  Artboard Presets
+                </div>
+                {ARTBOARD_PRESETS.map((preset) => (
+                  <DropdownMenu.Item
+                    key={preset.label}
+                    onClick={() => {
+                      updateDocumentProps({ width: preset.width, height: preset.height });
+                      setZoom(0.5);
+                      useToolStore.getState().setPan({ x: 0, y: 0 });
+                    }}
+                    className="flex items-center justify-between px-3 py-2 text-label-md font-label-md text-on-surface hover:bg-primary-container hover:text-on-primary-container rounded-xl cursor-pointer outline-none transition-colors"
+                  >
+                    <span>{preset.label}</span>
+                    <span className="text-[10px] opacity-60 font-mono">
+                      {preset.width}x{preset.height}
+                    </span>
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
 
         {/* Right: AI Palette, Actions, Zoom, Export, Search, Notifications, Profile */}

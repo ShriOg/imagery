@@ -16,6 +16,11 @@ export interface BaseElement {
   zIndex: number;
   locked: boolean;
   visible: boolean;
+  shadowEnabled?: boolean;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowColor?: string;
 }
 
 export interface TextElement extends BaseElement {
@@ -51,6 +56,7 @@ export interface ImageElement extends BaseElement {
   blur?: number;
   brightness?: number;
   contrast?: number;
+  saturation?: number;
   grayscale?: boolean;
   flipX?: boolean;
   flipY?: boolean;
@@ -81,6 +87,11 @@ export const BaseElementSchema = z.object({
   zIndex: z.number().default(0),
   locked: z.boolean().default(false),
   visible: z.boolean().default(true),
+  shadowEnabled: z.boolean().optional().default(false),
+  shadowBlur: z.number().optional().default(10),
+  shadowOffsetX: z.number().optional().default(5),
+  shadowOffsetY: z.number().optional().default(5),
+  shadowColor: z.string().optional().default('rgba(0,0,0,0.5)'),
 });
 
 export const TextElementSchema = BaseElementSchema.extend({
@@ -116,6 +127,7 @@ export const ImageElementSchema = BaseElementSchema.extend({
   blur: z.number().optional().default(0),
   brightness: z.number().optional().default(0),
   contrast: z.number().optional().default(0),
+  saturation: z.number().optional().default(0),
   grayscale: z.boolean().optional().default(false),
   flipX: z.boolean().optional().default(false),
   flipY: z.boolean().optional().default(false),

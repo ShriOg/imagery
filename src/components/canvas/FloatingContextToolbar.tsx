@@ -2,6 +2,8 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as Popover from "@radix-ui/react-popover";
+import * as Slider from "@radix-ui/react-slider";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { useToolStore } from "@/store/useToolStore";
 import { TextElement, ShapeElement, ImageElement } from "@/types/canvas";
@@ -88,12 +90,82 @@ export function FloatingContextToolbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setCropModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-primary text-on-primary font-semibold text-xs rounded-full shadow-md shadow-primary/20 hover:bg-primary-fixed transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary font-semibold text-xs rounded-full shadow-md shadow-primary/20 hover:bg-primary-fixed transition-all cursor-pointer"
               title="Crop Image"
             >
               <span className="material-symbols-outlined text-[16px]">crop</span>
               <span>Crop</span>
             </motion.button>
+
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-surface-variant hover:bg-surface-variant-high text-on-surface text-xs font-semibold rounded-full transition-all cursor-pointer"
+                  title="Adjust Image"
+                >
+                  <span className="material-symbols-outlined text-[16px]">tune</span>
+                  <span>Adjust</span>
+                </motion.button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="top"
+                  sideOffset={16}
+                  className="z-[60] w-64 p-5 bg-surface-container-highest/95 backdrop-blur-3xl border border-outline-variant/15 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Brightness</span>
+                      <span>{Math.round((imgEl.brightness || 0) * 100)}</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.brightness || 0]} min={-1} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { brightness: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                    </Slider.Root>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Contrast</span>
+                      <span>{Math.round((imgEl.contrast || 0) * 100)}</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.contrast || 0]} min={-1} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { contrast: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                    </Slider.Root>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Saturation</span>
+                      <span>{Math.round((imgEl.saturation || 0) * 100)}</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.saturation || 0]} min={-1} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { saturation: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                    </Slider.Root>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Blur</span>
+                      <span>{Math.round((imgEl.blur || 0) * 100)}</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[imgEl.blur || 0]} min={0} max={1} step={0.01} onValueChange={([val]) => updateElement(activeElement.id, { blur: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                    </Slider.Root>
+                  </div>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
 
             <div className="flex items-center gap-1">
               <motion.button
@@ -212,6 +284,101 @@ export function FloatingContextToolbar() {
           </span>
           <span className="text-xs font-mono text-on-surface">{opacity}%</span>
         </motion.div>
+
+        <div className="w-px h-6 bg-surface-variant"></div>
+
+        {/* SHADOW & BORDER (All Elements) */}
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="flex items-center gap-1.5 cursor-pointer group px-2 py-1 rounded-xl hover:bg-surface-variant/50 transition-colors"
+              title="Shadow & Border Settings"
+            >
+              <span className={`material-symbols-outlined text-[18px] transition-colors ${activeElement.shadowEnabled ? "text-primary" : "text-on-surface-variant group-hover:text-primary"}`}>
+                style
+              </span>
+            </motion.div>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              side="top"
+              sideOffset={16}
+              className="z-[60] w-64 p-5 bg-surface-container-highest/95 backdrop-blur-3xl border border-outline-variant/15 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-semibold text-on-surface">Drop Shadow</span>
+                <button 
+                  onClick={() => updateElement(activeElement.id, { shadowEnabled: !activeElement.shadowEnabled }, true)}
+                  className={`relative w-8 h-4 rounded-full transition-colors cursor-pointer ${activeElement.shadowEnabled ? "bg-primary" : "bg-surface-variant"}`}
+                >
+                  <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-surface-container-highest transition-all shadow-sm ${activeElement.shadowEnabled ? "left-4.5" : "left-0.5"}`} />
+                </button>
+              </div>
+
+              {activeElement.shadowEnabled && (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Blur</span>
+                      <span>{activeElement.shadowBlur || 0}px</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[activeElement.shadowBlur || 0]} min={0} max={50} step={1} onValueChange={([val]) => updateElement(activeElement.id, { shadowBlur: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                    </Slider.Root>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>X Offset</span>
+                      <span>{activeElement.shadowOffsetX || 0}px</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[activeElement.shadowOffsetX || 0]} min={-30} max={30} step={1} onValueChange={([val]) => updateElement(activeElement.id, { shadowOffsetX: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                    </Slider.Root>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Y Offset</span>
+                      <span>{activeElement.shadowOffsetY || 0}px</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[activeElement.shadowOffsetY || 0]} min={-30} max={30} step={1} onValueChange={([val]) => updateElement(activeElement.id, { shadowOffsetY: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                    </Slider.Root>
+                  </div>
+                </>
+              )}
+
+              {((isShape && shapeEl.shapeKind === "rectangle")) && (
+                <>
+                  <div className="h-px bg-surface-variant my-1" />
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                      <span>Corner Radius</span>
+                      <span>{shapeEl.cornerRadius || 0}px</span>
+                    </div>
+                    <Slider.Root className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer" value={[shapeEl.cornerRadius || 0]} min={0} max={100} step={1} onValueChange={([val]) => updateElement(activeElement.id, { cornerRadius: val }, true)}>
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                    </Slider.Root>
+                  </div>
+                </>
+              )}
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
 
         <div className="w-px h-6 bg-surface-variant"></div>
 

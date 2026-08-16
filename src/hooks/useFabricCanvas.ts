@@ -91,6 +91,12 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
       cornerStyle: "circle" as const,
       padding: 6,
       borderScaleFactor: 1.5,
+      shadow: el.shadowEnabled ? new fabric.Shadow({
+        color: el.shadowColor || 'rgba(0,0,0,0.5)',
+        blur: el.shadowBlur || 10,
+        offsetX: el.shadowOffsetX || 5,
+        offsetY: el.shadowOffsetY || 5,
+      }) : undefined,
     };
 
     let obj: fabric.FabricObject | null = null;
@@ -252,6 +258,16 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
           canvas.add(img);
           // Re-sort object in canvas to respect z-index
           syncCanvasZIndex(canvas, useCanvasStore.getState().document.elements);
+          
+          const filters: any[] = [];
+          if (imgEl.brightness) filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
+          if (imgEl.contrast) filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
+          if (imgEl.saturation) filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
+          if (imgEl.blur) filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
+          if (imgEl.grayscale) filters.push(new fabric.filters.Grayscale());
+          img.filters = filters;
+          img.applyFilters();
+
           canvas.requestRenderAll();
         })
         .catch((err) => {
@@ -311,6 +327,13 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
         const existing = existingMap.get(el.id);
 
         if (existing) {
+          const shadow = el.shadowEnabled ? new fabric.Shadow({
+            color: el.shadowColor || 'rgba(0,0,0,0.5)',
+            blur: el.shadowBlur || 10,
+            offsetX: el.shadowOffsetX || 5,
+            offsetY: el.shadowOffsetY || 5,
+          }) : null;
+
           existing.set({
             left: el.x,
             top: el.y,
@@ -319,6 +342,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
             visible: el.visible,
             selectable: !el.locked && el.visible,
             evented: !el.locked && el.visible,
+            shadow,
           });
 
           if (el.type === "text" && existing.type === "textbox") {
@@ -399,6 +423,16 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                   canvas.setActiveObject(newImg);
                 }
                 syncCanvasZIndex(canvas, elements);
+
+                const filters: any[] = [];
+                if (imgEl.brightness) filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
+                if (imgEl.contrast) filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
+                if (imgEl.saturation) filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
+                if (imgEl.blur) filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
+                if (imgEl.grayscale) filters.push(new fabric.filters.Grayscale());
+                newImg.filters = filters;
+                newImg.applyFilters();
+
                 canvas.requestRenderAll();
               });
             } else {
@@ -411,6 +445,16 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                 flipY: imgEl.flipY || false,
                 lockUniScaling: true,
               });
+
+              const filters: any[] = [];
+              if (imgEl.brightness) filters.push(new fabric.filters.Brightness({ brightness: imgEl.brightness }));
+              if (imgEl.contrast) filters.push(new fabric.filters.Contrast({ contrast: imgEl.contrast }));
+              if (imgEl.saturation) filters.push(new fabric.filters.Saturation({ saturation: imgEl.saturation }));
+              if (imgEl.blur) filters.push(new fabric.filters.Blur({ blur: imgEl.blur }));
+              if (imgEl.grayscale) filters.push(new fabric.filters.Grayscale());
+              
+              img.filters = filters;
+              img.applyFilters();
             }
           }
         } else {
