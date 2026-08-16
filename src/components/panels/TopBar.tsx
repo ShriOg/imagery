@@ -149,6 +149,20 @@ export function TopBar() {
             <span className="text-[10px] font-mono opacity-60 bg-surface-container px-1.5 py-0.5 rounded ml-0.5">⌘K</span>
           </motion.button>
 
+          {/* AI Audit Log Toggle */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              const { isOpen, setIsOpen } = require("@/store/useAILogStore").useAILogStore.getState();
+              setIsOpen(!isOpen);
+            }}
+            className="flex items-center justify-center p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors cursor-pointer"
+            title="View AI Audit Log"
+          >
+            <span className="material-symbols-outlined text-[18px]">history_edu</span>
+          </motion.button>
+
           <div className="w-px h-5 bg-outline-variant/20 hidden sm:block"></div>
 
           {/* Undo / Redo */}

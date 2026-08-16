@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { useAILogStore } from '@/store/useAILogStore';
+import { useToastStore } from '@/store/useToastStore';
 import { AIImageModification } from '@/types/ai-config';
 
 export function useAIImageModifier() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { updateElement, document: canvasDocument } = useCanvasStore();
+  const addLog = useAILogStore((s) => s.addLog);
+  const addToast = useToastStore((s) => s.addToast);
 
   const modifyImage = async (prompt: string, imageId: string) => {
     setIsGenerating(true);
@@ -29,12 +33,18 @@ export function useAIImageModifier() {
         throw new Error('Invalid image selection');
       }
 
+      // Log the AI modification
+      addLog({
+        prompt,
+        elementId: imageId,
+        config
+      });
+
       // Map config to our element schema
       const updates: any = {};
 
       if (config.presetFilter && config.presetFilter !== 'none') {
         // AI presetFilter maps directly to our presetFilter or gradePreset
-        // We'll map the AI preset strings directly to gradePreset or presetFilter
         const gradePresets = ['golden-hour', '90s-camcorder', 'cinematic-muted', 'vintage-fade', 'monochrome-noir'];
         if (gradePresets.includes(config.presetFilter)) {
           updates.gradePreset = config.presetFilter;
@@ -64,7 +74,6 @@ export function useAIImageModifier() {
           case '4:5': newAspectRatio = 4 / 5; break;
         }
         
-        // Preserve width, update height to match aspect ratio
         updates.aspectRatio = newAspectRatio;
         updates.height = Math.round(element.width / newAspectRatio);
       }
@@ -74,11 +83,12 @@ export function useAIImageModifier() {
         if (typeof config.flip.vertical === 'boolean') updates.flipY = config.flip.vertical;
       }
 
-      // Commit changes to Zustand
       updateElement(imageId, updates, true);
+      addToast("AI enchantment applied");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in AI Image Modifier:', error);
+      addToast(error.message || "AI failed to generate configuration");
     } finally {
       setIsGenerating(false);
     }

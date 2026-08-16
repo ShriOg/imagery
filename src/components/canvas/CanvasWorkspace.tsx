@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useFabricCanvas } from "@/hooks/useFabricCanvas";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useToolStore } from "@/store/useToolStore";
 import { useCanvasStore } from "@/store/useCanvasStore";
+import { useAILogStore } from "@/store/useAILogStore";
 import { ImageElement } from "@/types/canvas";
 
 export function CanvasWorkspace() {
@@ -217,7 +219,76 @@ export function CanvasWorkspace() {
           <canvas ref={canvasElRef} id="fabric-canvas" />
         </div>
       </div>
+
+      <AIAuditDrawer />
     </div>
+  );
+}
+
+function AIAuditDrawer() {
+  const { logs, isOpen, setIsOpen, clearLogs } = useAILogStore();
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ x: 320, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 320, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          className="fixed top-16 right-0 bottom-0 w-80 bg-surface-container-low/95 backdrop-blur-3xl border-l border-outline-variant/20 z-50 shadow-2xl flex flex-col"
+        >
+          <div className="flex items-center justify-between p-4 border-b border-outline-variant/15">
+            <div className="flex items-center gap-2 text-primary font-semibold">
+              <span className="material-symbols-outlined text-[18px]">history_edu</span>
+              <span className="text-sm">AI Audit Log</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={clearLogs}
+                title="Clear Logs"
+                className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-4">
+            {logs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-on-surface-variant opacity-60">
+                <span className="material-symbols-outlined text-[32px] mb-2">auto_awesome</span>
+                <span className="text-xs">No AI actions recorded yet.</span>
+              </div>
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} className="flex flex-col gap-2 p-3 bg-surface-container rounded-xl border border-outline-variant/10">
+                  <div className="flex items-center justify-between text-[10px] text-on-surface-variant font-mono">
+                    <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                    <span>ID: {log.elementId.substring(0, 8)}...</span>
+                  </div>
+                  <div className="text-xs text-on-surface font-medium bg-surface-variant/30 p-2 rounded-lg italic">
+                    "{log.prompt}"
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1 block">Config Generated</span>
+                    <pre className="text-[9px] font-mono text-on-surface-variant bg-black/40 p-2 rounded-lg overflow-x-auto">
+                      {JSON.stringify(log.config, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

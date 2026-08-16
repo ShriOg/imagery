@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { CanvasDocument, CanvasElement, TextElement, ShapeElement, ImageElement } from '@/types/canvas';
+import { useToastStore } from '@/store/useToastStore';
 
 interface CanvasStoreState {
   document: CanvasDocument;
@@ -83,6 +84,7 @@ export const useCanvasStore = create<CanvasStoreState>()(
       // Filter out selection if selected element no longer exists
       const existingIds = new Set(previous.elements.map(e => e.id));
       state.selectedIds = state.selectedIds.filter(id => existingIds.has(id));
+      useToastStore.getState().addToast("Undid last action");
     }),
 
     redo: () => set((state) => {
@@ -92,6 +94,7 @@ export const useCanvasStore = create<CanvasStoreState>()(
       state.document = next;
       const existingIds = new Set(next.elements.map(e => e.id));
       state.selectedIds = state.selectedIds.filter(id => existingIds.has(id));
+      useToastStore.getState().addToast("Redid last action");
     }),
 
     setSelectedIds: (ids) => set((state) => {
@@ -170,16 +173,35 @@ export const useCanvasStore = create<CanvasStoreState>()(
 
     removeElement: (id) => set((state) => {
       get().commitHistory();
+      const el = state.document.elements.find(e => e.id === id);
+      const typeStr = el ? el.type.charAt(0).toUpperCase() + el.type.slice(1) : "Element";
       state.document.elements = state.document.elements.filter(e => e.id !== id);
       state.selectedIds = state.selectedIds.filter(selectedId => selectedId !== id);
+      
+      useToastStore.getState().addToast(`${typeStr} deleted`, {
+        label: "Undo",
+        onClick: () => get().undo()
+      });
     }),
 
     removeSelected: () => set((state) => {
       if (state.selectedIds.length === 0) return;
       get().commitHistory();
+      
       const toRemove = new Set(state.selectedIds);
+      const typeStr = state.selectedIds.length === 1 
+        ? (state.document.elements.find(e => e.id === state.selectedIds[0])?.type || "element") 
+        : `${state.selectedIds.length} items`;
+        
+      const formattedType = typeof typeStr === "string" ? typeStr.charAt(0).toUpperCase() + typeStr.slice(1) : typeStr;
+      
       state.document.elements = state.document.elements.filter(e => !toRemove.has(e.id));
       state.selectedIds = [];
+      
+      useToastStore.getState().addToast(`${formattedType} deleted`, {
+        label: "Undo",
+        onClick: () => get().undo()
+      });
     }),
 
     duplicateElement: (id) => set((state) => {
@@ -233,6 +255,7 @@ export const useCanvasStore = create<CanvasStoreState>()(
         el.zIndex = above.zIndex;
         above.zIndex = temp;
         elements.sort((a, b) => a.zIndex - b.zIndex);
+        useToastStore.getState().addToast("Moved forward");
       }
     }),
 
@@ -247,6 +270,7 @@ export const useCanvasStore = create<CanvasStoreState>()(
         el.zIndex = below.zIndex;
         below.zIndex = temp;
         elements.sort((a, b) => a.zIndex - b.zIndex);
+        useToastStore.getState().addToast("Moved backward");
       }
     }),
 
@@ -258,6 +282,7 @@ export const useCanvasStore = create<CanvasStoreState>()(
       const maxZ = Math.max(...elements.map(e => e.zIndex), 0);
       el.zIndex = maxZ + 1;
       elements.sort((a, b) => a.zIndex - b.zIndex);
+      useToastStore.getState().addToast("Brought to front");
     }),
 
     sendToBack: (id) => set((state) => {
@@ -268,6 +293,7 @@ export const useCanvasStore = create<CanvasStoreState>()(
       const minZ = Math.min(...elements.map(e => e.zIndex), 0);
       el.zIndex = minZ - 1;
       elements.sort((a, b) => a.zIndex - b.zIndex);
+      useToastStore.getState().addToast("Sent to back");
     }),
 
     reorderLayer: (sourceIndex, destinationIndex) => set((state) => {

@@ -576,6 +576,46 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
                 filters.push(new fabric.filters.Grayscale());
               }
               
+              if (imgEl.presetFilter && imgEl.presetFilter !== "none") {
+                switch (imgEl.presetFilter) {
+                  case "grayscale": filters.push(new fabric.filters.Grayscale()); break;
+                  case "negative": filters.push(new fabric.filters.Invert()); break;
+                  case "noir": filters.push(new fabric.filters.BlackWhite()); break;
+                  case "frosted": filters.push(new fabric.filters.Blur({ blur: 0.5 })); break;
+                  case "sepia": filters.push(new fabric.filters.Sepia()); break;
+                  case "polaroid": filters.push(new fabric.filters.Polaroid()); break;
+                  case "kodachrome": filters.push(new fabric.filters.Kodachrome()); break;
+                  case "brownie": filters.push(new fabric.filters.Brownie()); break;
+                  case "technicolor": filters.push(new fabric.filters.Technicolor()); break;
+                  case "vintage": filters.push(new fabric.filters.Vintage()); break;
+                  case "8-bit": filters.push(new fabric.filters.Pixelate({ blocksize: 10 })); break;
+                  case "duotone": filters.push(new fabric.filters.BlendColor({ color: '#ff007f', mode: 'multiply', alpha: 0.7 })); break;
+                }
+              }
+              
+              if (imgEl.gradePreset && imgEl.gradePreset !== "none") {
+                let matrix: number[] | null = null;
+                switch (imgEl.gradePreset) {
+                  case "golden-hour": matrix = [1.1, 0.1, 0.0, 0, 20, 0.0, 1.1, 0.0, 0, 10, 0.0, 0.0, 0.9, 0, -10, 0, 0, 0, 1, 0]; break;
+                  case "90s-camcorder": matrix = [1.3, 0.0, 0.0, 0, -20, 0.0, 1.4, 0.0, 0, 10, 0.0, 0.0, 1.2, 0, -30, 0, 0, 0, 1, 0]; break;
+                  case "cinematic-muted": matrix = [0.8, 0.1, 0.1, 0, -15, 0.1, 0.9, 0.1, 0, 10, 0.1, 0.1, 1.1, 0, 20, 0, 0, 0, 1, 0]; break;
+                  case "vintage-fade": matrix = [1.0, 0.0, 0.0, 0, 40, 0.0, 0.9, 0.0, 0, 20, 0.0, 0.0, 0.8, 0, 30, 0, 0, 0, 1, 0]; break;
+                  case "monochrome-noir": matrix = [0.6, 0.6, 0.6, 0, -40, 0.6, 0.6, 0.6, 0, -40, 0.6, 0.6, 0.6, 0, -40, 0, 0, 0, 1, 0]; break;
+                }
+                if (matrix) filters.push(new fabric.filters.ColorMatrix({ matrix }));
+              }
+              
+              if (imgEl.filmGrain && imgEl.filmGrain > 0) {
+                const noiseVal = Math.floor((imgEl.filmGrain / 100) * 150);
+                filters.push(new fabric.filters.Noise({ noise: noiseVal }));
+              }
+              
+              if (imgEl.temperature && imgEl.temperature !== 0) {
+                const isWarm = imgEl.temperature > 0;
+                const alpha = Math.abs(imgEl.temperature) / 100 * 0.4;
+                filters.push(new fabric.filters.BlendColor({ color: isWarm ? "#ffaa00" : "#0066ff", mode: 'multiply', alpha }));
+              }
+              
               img.filters = filters;
               img.applyFilters();
               existing.dirty = true;

@@ -21,9 +21,8 @@ export async function POST(req: Request) {
       throw new Error("Missing NVIDIA NIM configuration in environment variables");
     }
 
-    if (!NIM_MODEL || NIM_MODEL === "<model selected after benchmark>") {
-      NIM_MODEL = "meta/llama-3.1-70b-instruct";
-    }
+    // Force Llama 3.1 70B as it reliably supports json_schema structured outputs
+    NIM_MODEL = "meta/llama-3.1-70b-instruct";
 
     const schema = zodToJsonSchema(AIImageModificationSchema as any, "image_config");
 

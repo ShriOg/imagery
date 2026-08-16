@@ -115,6 +115,20 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
               <span>Crop</span>
             </motion.button>
 
+            {/* Magic Enchant */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              disabled={isGenerating}
+              onClick={() => modifyImage("Automatically enhance this image to look incredibly premium, balanced, and cinematically perfect.", activeElement.id)}
+              className="flex items-center justify-center p-1.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-full shadow-md hover:shadow-lg hover:shadow-orange-500/30 transition-all cursor-pointer disabled:opacity-50"
+              title="1-Click Enchant (Auto-Enhance)"
+            >
+              <span className={`material-symbols-outlined text-[18px] ${isGenerating ? "animate-spin" : ""}`}>
+                {isGenerating ? "refresh" : "temp_preferences_custom"}
+              </span>
+            </motion.button>
+
             {/* AI Sparkle */}
             <Popover.Root open={isAIPopoverOpen} onOpenChange={setIsAIPopoverOpen}>
               <Popover.Trigger asChild>
