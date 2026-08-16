@@ -211,12 +211,22 @@ export function CanvasWorkspace() {
           }}
           className={`rounded-md relative overflow-hidden transition-all duration-500 ${
             isGenerating
-              ? "ring-2 ring-primary shadow-[0_0_80px_rgba(251,188,0,0.5)] animate-pulse"
+              ? "ring-2 ring-primary shadow-[0_0_80px_rgba(251,188,0,0.6)] animate-breathe"
               : "ring-1 ring-white/10 shadow-[0_0_60px_rgba(255,226,171,0.08),0_20px_60px_rgba(0,0,0,0.9),0_0_1px_1px_rgba(255,255,255,0.08)]"
           }`}
         >
           {/* HTML5 Canvas instance for Fabric.js v6 */}
           <canvas ref={canvasElRef} id="fabric-canvas" />
+
+          {/* AI Generating shimmer overlay */}
+          {isGenerating && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 pointer-events-none z-10 ai-shimmer-overlay"
+            />
+          )}
         </div>
       </div>
 

@@ -95,11 +95,11 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
     <motion.div
       key="toolbar-single"
       layout
-      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      initial={{ opacity: 0, y: 40, scale: 0.92 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 450, damping: 28 }}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-5 px-6 sm:px-7 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-outline-variant/15 z-30 select-none max-w-[95vw] overflow-x-auto scrollbar-none"
+      exit={{ opacity: 0, y: 24, scale: 0.9 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-5 px-6 sm:px-7 py-3 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.04)] border border-outline-variant/15 z-30 select-none max-w-[95vw] overflow-x-auto scrollbar-none"
     >
         {/* IMAGE SPECIFIC: Crop & Flip */}
         {isImage && (
@@ -117,28 +117,36 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
 
             {/* Magic Enchant */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.12, rotate: 5 }}
+              whileTap={{ scale: 0.92, rotate: -5 }}
               disabled={isGenerating}
               onClick={() => modifyImage("Automatically enhance this image to look incredibly premium, balanced, and cinematically perfect.", activeElement.id)}
-              className="flex items-center justify-center p-1.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-full shadow-md hover:shadow-lg hover:shadow-orange-500/30 transition-all cursor-pointer disabled:opacity-50"
-              title="1-Click Enchant (Auto-Enhance)"
+              className="btn-enchant flex items-center justify-center p-1.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-full shadow-md cursor-pointer disabled:opacity-50"
+              title="1-Click AI Enchant"
             >
-              <span className={`material-symbols-outlined text-[18px] ${isGenerating ? "animate-spin" : ""}`}>
-                {isGenerating ? "refresh" : "temp_preferences_custom"}
-              </span>
+              <motion.span
+                className="material-symbols-outlined text-[18px]"
+                animate={isGenerating ? { rotate: 360 } : { rotate: 0 }}
+                transition={isGenerating ? { repeat: Infinity, duration: 1, ease: "linear" } : { duration: 0.3 }}
+              >
+                {isGenerating ? "refresh" : "auto_fix_high"}
+              </motion.span>
             </motion.button>
 
             {/* AI Sparkle */}
             <Popover.Root open={isAIPopoverOpen} onOpenChange={setIsAIPopoverOpen}>
               <Popover.Trigger asChild>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center justify-center p-1.5 bg-gradient-to-tr from-purple-500 to-pink-500 text-white rounded-full shadow-md hover:shadow-lg hover:shadow-purple-500/30 transition-all cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.92 }}
+                  className="ai-shimmer-overlay flex items-center justify-center p-1.5 bg-gradient-to-tr from-purple-500 to-pink-500 text-white rounded-full shadow-md shadow-purple-500/20 cursor-pointer"
                   title="AI Edit"
                 >
-                  <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                  <motion.span
+                    className="material-symbols-outlined text-[18px]"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                  >auto_awesome</motion.span>
                 </motion.button>
               </Popover.Trigger>
               <Popover.Portal>

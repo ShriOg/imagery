@@ -192,11 +192,21 @@ export const useCanvasStore = create<CanvasStoreState>()(
       });
     },
     removeSelected: () => {
-      useToastStore.getState().addToast(`${formattedType} deleted`, {
+      const state = get();
+      if (state.selectedIds.length === 0) return;
+      state.commitHistory();
+      const count = state.selectedIds.length;
+      set((draft) => {
+        draft.document.elements = draft.document.elements.filter(
+          (el) => !draft.selectedIds.includes(el.id)
+        );
+        draft.selectedIds = [];
+      });
+      useToastStore.getState().addToast(`Deleted ${count} item${count > 1 ? 's' : ''}`, {
         label: "Undo",
         onClick: () => get().undo()
       });
-    }),
+    },
 
     duplicateElement: (id) => set((state) => {
       const el = state.document.elements.find(e => e.id === id);
