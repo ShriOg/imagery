@@ -9,6 +9,85 @@ import { useToolStore } from "@/store/useToolStore";
 import { TextElement, ShapeElement, ImageElement } from "@/types/canvas";
 import { useAIImageModifier } from "@/hooks/useAIImageModifier";
 
+function useSelectionPosition() {
+  const selectedIds = useCanvasStore((s) => s.selectedIds);
+  const zoom = useToolStore((s) => s.zoom);
+  const pan = useToolStore((s) => s.pan);
+  const [coords, setCoords] = React.useState<{ x: number; y: number } | null>(null);
+
+  React.useEffect(() => {
+    if (selectedIds.length === 0) {
+      setCoords(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const fabricCanvas = (window as any).__imageryFabricCanvas;
+      if (!fabricCanvas) return;
+
+      const activeObj = fabricCanvas.getActiveObject();
+      if (!activeObj) return;
+
+      const canvasEl = fabricCanvas.upperCanvasEl || fabricCanvas.lowerCanvasEl || fabricCanvas.getElement?.();
+      if (!canvasEl) return;
+
+      const canvasRect = canvasEl.getBoundingClientRect();
+      const rect = activeObj.getBoundingRect();
+
+      const scale = canvasRect.width / (fabricCanvas.getWidth() || 1);
+
+      const centerX = canvasRect.left + (rect.left + rect.width / 2) * scale;
+      const bottomY = canvasRect.top + (rect.top + rect.height) * scale;
+      const topY = canvasRect.top + rect.top * scale;
+
+      const toolbarHeight = 56;
+      const margin = 20;
+
+      let targetX = centerX;
+      let targetY = bottomY + margin;
+
+      // If opening below would overflow the bottom of the screen, place above
+      if (targetY + toolbarHeight > window.innerHeight - 24) {
+        targetY = Math.max(76, topY - toolbarHeight - margin);
+      }
+
+      // Constrain horizontally within viewport
+      targetX = Math.max(220, Math.min(window.innerWidth - 220, targetX));
+      targetY = Math.max(76, Math.min(window.innerHeight - 70, targetY));
+
+      setCoords({ x: Math.round(targetX), y: Math.round(targetY) });
+    };
+
+    updatePosition();
+
+    const fabricCanvas = (window as any).__imageryFabricCanvas;
+    if (fabricCanvas) {
+      fabricCanvas.on("object:moving", updatePosition);
+      fabricCanvas.on("object:scaling", updatePosition);
+      fabricCanvas.on("object:rotating", updatePosition);
+      fabricCanvas.on("after:render", updatePosition);
+      fabricCanvas.on("selection:updated", updatePosition);
+    }
+
+    window.addEventListener("resize", updatePosition);
+    const interval = setInterval(updatePosition, 120);
+
+    return () => {
+      if (fabricCanvas) {
+        fabricCanvas.off("object:moving", updatePosition);
+        fabricCanvas.off("object:scaling", updatePosition);
+        fabricCanvas.off("object:rotating", updatePosition);
+        fabricCanvas.off("after:render", updatePosition);
+        fabricCanvas.off("selection:updated", updatePosition);
+      }
+      window.removeEventListener("resize", updatePosition);
+      clearInterval(interval);
+    };
+  }, [selectedIds, zoom, pan]);
+
+  return coords;
+}
+
 export function FloatingContextToolbar() {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
   const document = useCanvasStore((s) => s.document);
@@ -20,6 +99,7 @@ export function FloatingContextToolbar() {
   const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
   const isMulti = selectedIds.length > 1;
   const activeElement = selectedIds.length === 1 ? document.elements.find((e) => e.id === selectedIds[0]) : null;
+  const coords = useSelectionPosition();
 
   return (
     <AnimatePresence>
@@ -28,11 +108,18 @@ export function FloatingContextToolbar() {
           key="toolbar-multi"
           drag
           dragMomentum={false}
-          initial={{ opacity: 0, y: 40, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 450, damping: 28 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none cursor-default"
+          style={
+            coords
+              ? { left: coords.x, top: coords.y, transform: "translate(-50%, 0)" }
+              : undefined
+          }
+          className={`${
+            coords ? "fixed" : "fixed bottom-6 left-1/2 -translate-x-1/2"
+          } flex items-center gap-4 px-6 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none cursor-default`}
         >
           <div
             className="flex items-center justify-center p-1 text-on-surface-variant/40 hover:text-on-surface cursor-grab active:cursor-grabbing -ml-2 shrink-0"
@@ -66,13 +153,13 @@ export function FloatingContextToolbar() {
       )}
 
       {!isMulti && activeElement && (
-        <SingleElementToolbar activeElement={activeElement} />
+        <SingleElementToolbar activeElement={activeElement} coords={coords} />
       )}
     </AnimatePresence>
   );
 }
 
-function SingleElementToolbar({ activeElement }: { activeElement: any }) {
+function SingleElementToolbar({ activeElement, coords }: { activeElement: any; coords: { x: number; y: number } | null }) {
   const document = useCanvasStore((s) => s.document);
   const updateElement = useCanvasStore((s) => s.updateElement);
   const duplicateSelected = useCanvasStore((s) => s.duplicateSelected);
@@ -103,11 +190,18 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
       key="toolbar-single"
       drag
       dragMomentum={false}
-      initial={{ opacity: 0, y: 40, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 24, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-2.5 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none max-w-[95vw] overflow-x-auto scrollbar-none cursor-default"
+      style={
+        coords
+          ? { left: coords.x, top: coords.y, transform: "translate(-50%, 0)" }
+          : undefined
+      }
+      className={`${
+        coords ? "fixed" : "fixed bottom-6 left-1/2 -translate-x-1/2"
+      } flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-2.5 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none max-w-[95vw] overflow-x-auto scrollbar-none cursor-default`}
     >
         {/* Drag handle */}
         <div
