@@ -18,14 +18,8 @@ export function FloatingContextToolbar() {
   const sendBackward = useCanvasStore((s) => s.sendBackward);
   const removeSelected = useCanvasStore((s) => s.removeSelected);
   const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
-  const { modifyImage, isGenerating } = useAIImageModifier();
-
   const isMulti = selectedIds.length > 1;
   const activeElement = selectedIds.length === 1 ? document.elements.find((e) => e.id === selectedIds[0]) : null;
-
-  // Local state for AI input
-  const [aiPrompt, setAiPrompt] = React.useState("");
-  const [isAIPopoverOpen, setIsAIPopoverOpen] = React.useState(false);
 
   return (
     <AnimatePresence>
@@ -79,6 +73,11 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
   const sendBackward = useCanvasStore((s) => s.sendBackward);
   const removeSelected = useCanvasStore((s) => s.removeSelected);
   const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
+  const { modifyImage, isGenerating } = useAIImageModifier();
+
+  // Local state for AI input
+  const [aiPrompt, setAiPrompt] = React.useState("");
+  const [isAIPopoverOpen, setIsAIPopoverOpen] = React.useState(false);
 
   // Extract element properties
   const isText = activeElement.type === "text";
