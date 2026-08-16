@@ -9,90 +9,8 @@ import { useToolStore } from "@/store/useToolStore";
 import { TextElement, ShapeElement, ImageElement } from "@/types/canvas";
 import { useAIImageModifier } from "@/hooks/useAIImageModifier";
 
-function useSelectionPosition() {
-  const selectedIds = useCanvasStore((s) => s.selectedIds);
-  const zoom = useToolStore((s) => s.zoom);
-  const pan = useToolStore((s) => s.pan);
-  const [coords, setCoords] = React.useState<{ x: number; y: number } | null>(null);
+// Fixed bottom toolbar configuration
 
-  React.useEffect(() => {
-    if (selectedIds.length === 0) {
-      setCoords(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const fabricCanvas = (window as any).__imageryFabricCanvas;
-      if (!fabricCanvas) return;
-
-      const activeObj = fabricCanvas.getActiveObject();
-      if (!activeObj) return;
-
-      const canvasEl = fabricCanvas.upperCanvasEl || fabricCanvas.lowerCanvasEl || fabricCanvas.getElement?.();
-      if (!canvasEl) return;
-
-      const canvasRect = canvasEl.getBoundingClientRect();
-      const rect = activeObj.getBoundingRect();
-
-      const scale = canvasRect.width / (fabricCanvas.getWidth() || 1);
-
-      const centerX = canvasRect.left + (rect.left + rect.width / 2) * scale;
-      const bottomY = canvasRect.top + (rect.top + rect.height) * scale;
-      const topY = canvasRect.top + rect.top * scale;
-
-      const toolbarHeight = 56;
-      const margin = 16;
-
-      let targetX = centerX;
-      let targetY = bottomY + margin;
-
-      // If opening below would overflow the bottom of the screen, place above
-      if (targetY + toolbarHeight > window.innerHeight - 20) {
-        targetY = Math.max(76, topY - toolbarHeight - margin);
-      }
-
-      // Constrain horizontally within viewport
-      targetX = Math.max(220, Math.min(window.innerWidth - 220, targetX));
-      targetY = Math.max(76, Math.min(window.innerHeight - 70, targetY));
-
-      const roundedX = Math.round(targetX);
-      const roundedY = Math.round(targetY);
-
-      setCoords((prev) => {
-        if (prev && Math.abs(prev.x - roundedX) < 1 && Math.abs(prev.y - roundedY) < 1) {
-          return prev;
-        }
-        return { x: roundedX, y: roundedY };
-      });
-    };
-
-    updatePosition();
-
-    const fabricCanvas = (window as any).__imageryFabricCanvas;
-    if (fabricCanvas) {
-      fabricCanvas.on("object:moving", updatePosition);
-      fabricCanvas.on("object:scaling", updatePosition);
-      fabricCanvas.on("object:rotating", updatePosition);
-      fabricCanvas.on("after:render", updatePosition);
-      fabricCanvas.on("selection:updated", updatePosition);
-    }
-
-    window.addEventListener("resize", updatePosition);
-
-    return () => {
-      if (fabricCanvas) {
-        fabricCanvas.off("object:moving", updatePosition);
-        fabricCanvas.off("object:scaling", updatePosition);
-        fabricCanvas.off("object:rotating", updatePosition);
-        fabricCanvas.off("after:render", updatePosition);
-        fabricCanvas.off("selection:updated", updatePosition);
-      }
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [selectedIds, zoom, pan]);
-
-  return coords;
-}
 
 export function FloatingContextToolbar() {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
@@ -101,7 +19,6 @@ export function FloatingContextToolbar() {
   const removeSelected = useCanvasStore((s) => s.removeSelected);
   const isMulti = selectedIds.length > 1;
   const activeElement = selectedIds.length === 1 ? document.elements.find((e) => e.id === selectedIds[0]) : null;
-  const coords = useSelectionPosition();
   const multiDragControls = useDragControls();
 
   return (
@@ -113,18 +30,11 @@ export function FloatingContextToolbar() {
           dragControls={multiDragControls}
           dragListener={false}
           dragMomentum={false}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 450, damping: 28 }}
-          style={
-            coords
-              ? { left: coords.x, top: coords.y, transform: "translate(-50%, 0)" }
-              : undefined
-          }
-          className={`${
-            coords ? "fixed" : "fixed bottom-6 left-1/2 -translate-x-1/2"
-          } flex items-center gap-4 px-6 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none`}
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none"
         >
           <div
             onPointerDown={(e) => multiDragControls.start(e)}
@@ -159,13 +69,13 @@ export function FloatingContextToolbar() {
       )}
 
       {!isMulti && activeElement && (
-        <SingleElementToolbar activeElement={activeElement} coords={coords} />
+        <SingleElementToolbar activeElement={activeElement} />
       )}
     </AnimatePresence>
   );
 }
 
-function SingleElementToolbar({ activeElement, coords }: { activeElement: any; coords: { x: number; y: number } | null }) {
+function SingleElementToolbar({ activeElement }: { activeElement: any }) {
   const document = useCanvasStore((s) => s.document);
   const updateElement = useCanvasStore((s) => s.updateElement);
   const duplicateSelected = useCanvasStore((s) => s.duplicateSelected);
@@ -199,18 +109,11 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, y: 30, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.9 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      style={
-        coords
-          ? { left: coords.x, top: coords.y, transform: "translate(-50%, 0)" }
-          : undefined
-      }
-      className={`${
-        coords ? "fixed" : "fixed bottom-6 left-1/2 -translate-x-1/2"
-      } flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-2.5 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none max-w-[95vw]`}
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-2.5 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none max-w-[95vw]"
     >
         {/* Drag handle */}
         <div
@@ -271,7 +174,7 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
-                  side="bottom"
+                  side="top"
                   sideOffset={16}
                   className="z-[100] w-72 p-4 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-3 text-on-surface"
                 >
@@ -354,7 +257,7 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
-                  side="bottom"
+                  side="top"
                   sideOffset={16}
                   className="z-[100] w-72 p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
                 >
@@ -484,7 +387,7 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
-                  side="bottom"
+                  side="top"
                   sideOffset={16}
                   className="z-[100] w-80 p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
                 >
@@ -555,7 +458,7 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
-                  side="bottom"
+                  side="top"
                   sideOffset={16}
                   className="z-[100] w-[340px] p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
                 >
