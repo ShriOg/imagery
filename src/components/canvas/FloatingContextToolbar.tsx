@@ -7,6 +7,7 @@ import * as Slider from "@radix-ui/react-slider";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { useToolStore } from "@/store/useToolStore";
 import { TextElement, ShapeElement, ImageElement } from "@/types/canvas";
+import { useAIImageModifier } from "@/hooks/useAIImageModifier";
 
 export function FloatingContextToolbar() {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
@@ -17,9 +18,14 @@ export function FloatingContextToolbar() {
   const sendBackward = useCanvasStore((s) => s.sendBackward);
   const removeSelected = useCanvasStore((s) => s.removeSelected);
   const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
+  const { modifyImage, isGenerating } = useAIImageModifier();
 
   const isMulti = selectedIds.length > 1;
   const activeElement = selectedIds.length === 1 ? document.elements.find((e) => e.id === selectedIds[0]) : null;
+
+  // Local state for AI input
+  const [aiPrompt, setAiPrompt] = React.useState("");
+  const [isAIPopoverOpen, setIsAIPopoverOpen] = React.useState(false);
 
   return (
     <AnimatePresence>
@@ -109,6 +115,85 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
               <span className="material-symbols-outlined text-[16px]">crop</span>
               <span>Crop</span>
             </motion.button>
+
+            {/* AI Sparkle */}
+            <Popover.Root open={isAIPopoverOpen} onOpenChange={setIsAIPopoverOpen}>
+              <Popover.Trigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center p-1.5 bg-gradient-to-tr from-purple-500 to-pink-500 text-white rounded-full shadow-md hover:shadow-lg hover:shadow-purple-500/30 transition-all cursor-pointer"
+                  title="AI Edit"
+                >
+                  <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                </motion.button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="top"
+                  sideOffset={16}
+                  className="z-[60] w-72 p-4 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-3 text-on-surface"
+                >
+                  <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">psychology</span>
+                      AI Magic
+                    </span>
+                    <button
+                      onClick={() => setIsAIPopoverOpen(false)}
+                      className="text-on-surface-variant hover:text-on-surface cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  </div>
+                  
+                  <div className="relative">
+                    <textarea
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="e.g. 'Make it look like a 90s vintage camera'"
+                      className="w-full h-20 bg-surface-container/60 border border-outline-variant/20 rounded-xl p-3 text-[11px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 resize-none custom-scrollbar transition-all"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          if (aiPrompt.trim() && !isGenerating) {
+                            modifyImage(aiPrompt.trim(), activeElement.id);
+                            setIsAIPopoverOpen(false);
+                            setAiPrompt("");
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    disabled={isGenerating || !aiPrompt.trim()}
+                    onClick={() => {
+                      modifyImage(aiPrompt.trim(), activeElement.id);
+                      setIsAIPopoverOpen(false);
+                      setAiPrompt("");
+                    }}
+                    className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      isGenerating 
+                        ? "bg-surface-variant text-on-surface-variant cursor-not-allowed opacity-70"
+                        : "bg-primary text-on-primary hover:bg-primary-fixed cursor-pointer shadow-md shadow-primary/20"
+                    }`}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <span className="material-symbols-outlined text-[14px] animate-spin">refresh</span>
+                        <span>Thinking...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                        <span>Generate</span>
+                      </>
+                    )}
+                  </button>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
 
             <Popover.Root>
               <Popover.Trigger asChild>
@@ -235,6 +320,195 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
                       <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
                     </Slider.Root>
                   </div>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+
+            {/* 12-Preset Filter Library */}
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    (imgEl.presetFilter && imgEl.presetFilter !== "none")
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "bg-surface-variant hover:bg-surface-variant-high text-on-surface"
+                  }`}
+                  title="Apply Filter Presets"
+                >
+                  <span className="material-symbols-outlined text-[16px]">auto_awesome_mosaic</span>
+                  <span>Filters</span>
+                </motion.button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="top"
+                  sideOffset={16}
+                  className="z-[60] w-80 p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
+                >
+                  <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Preset Filters</span>
+                    <button
+                      onClick={() => updateElement(activeElement.id, { presetFilter: "none" }, true)}
+                      className="text-[11px] text-primary hover:underline cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+                    {[
+                      { id: "none", label: "Original" },
+                      { id: "grayscale", label: "Grayscale" },
+                      { id: "negative", label: "Negative" },
+                      { id: "noir", label: "Noir" },
+                      { id: "frosted", label: "Frosted" },
+                      { id: "sepia", label: "Sepia" },
+                      { id: "polaroid", label: "Polaroid" },
+                      { id: "kodachrome", label: "Kodachrome" },
+                      { id: "brownie", label: "Brownie" },
+                      { id: "technicolor", label: "Technicolor" },
+                      { id: "vintage", label: "Vintage" },
+                      { id: "8-bit", label: "8-Bit" },
+                      { id: "duotone", label: "Duotone" },
+                    ].map((filter) => {
+                      const isActive = (imgEl.presetFilter || "none") === filter.id;
+                      return (
+                        <button
+                          key={filter.id}
+                          onClick={() => updateElement(activeElement.id, { presetFilter: filter.id }, true)}
+                          className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-pointer ${
+                            isActive
+                              ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(251,188,0,0.2)]"
+                              : "bg-surface-container/60 border-outline-variant/20 hover:bg-surface-variant hover:border-outline-variant/40"
+                          }`}
+                        >
+                          <span className={`text-[10px] font-semibold ${isActive ? "text-primary" : "text-on-surface-variant"}`}>
+                            {filter.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+
+            {/* Cinematic Grade Library */}
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    (imgEl.gradePreset && imgEl.gradePreset !== "none" || (imgEl.filmGrain && imgEl.filmGrain > 0) || (imgEl.temperature && imgEl.temperature !== 0))
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "bg-surface-variant hover:bg-surface-variant-high text-on-surface"
+                  }`}
+                  title="Colour Grade Engine"
+                >
+                  <span className="material-symbols-outlined text-[16px]">movie</span>
+                  <span>Grade</span>
+                </motion.button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="top"
+                  sideOffset={16}
+                  className="z-[60] w-[340px] p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
+                >
+                  <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Cinematic Grade</span>
+                    <button
+                      onClick={() => updateElement(activeElement.id, { gradePreset: "none", filmGrain: 0, temperature: 0 }, true)}
+                      className="text-[11px] text-primary hover:underline cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  </div>
+
+                  {/* Horizontal Scroll List for Cinematic Presets */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    {[
+                      { id: "none", label: "Normal", icon: "image" },
+                      { id: "golden-hour", label: "Golden Hour", icon: "wb_twilight" },
+                      { id: "90s-camcorder", label: "90s Camcorder", icon: "videocam" },
+                      { id: "cinematic-muted", label: "Cinematic Muted", icon: "camera_roll" },
+                      { id: "vintage-fade", label: "Vintage Fade", icon: "monochrome_photos" },
+                      { id: "monochrome-noir", label: "Noir", icon: "contrast" },
+                    ].map((preset) => {
+                      const isActive = (imgEl.gradePreset || "none") === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          onClick={() => updateElement(activeElement.id, { gradePreset: preset.id }, true)}
+                          className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all cursor-pointer min-w-[72px] ${
+                            isActive
+                              ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(251,188,0,0.2)]"
+                              : "bg-surface-container/60 border-outline-variant/20 hover:bg-surface-variant hover:border-outline-variant/40"
+                          }`}
+                        >
+                          <span className={`material-symbols-outlined text-[20px] mb-1 ${isActive ? "text-primary" : "text-on-surface-variant"}`}>
+                            {preset.icon}
+                          </span>
+                          <span className={`text-[9px] font-semibold text-center whitespace-nowrap ${isActive ? "text-primary" : "text-on-surface-variant"}`}>
+                            {preset.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="h-px bg-outline-variant/15 w-full my-1" />
+
+                  {/* Atmosphere Sliders */}
+                  <div className="flex flex-col gap-4">
+                    {/* Film Grain */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
+                        <span>Film Grain</span>
+                        <span className="font-mono">{imgEl.filmGrain || 0}%</span>
+                      </div>
+                      <Slider.Root
+                        className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                        value={[imgEl.filmGrain || 0]}
+                        min={0}
+                        max={100}
+                        step={1}
+                        onValueChange={([val]) => updateElement(activeElement.id, { filmGrain: val }, false)}
+                        onValueCommit={([val]) => updateElement(activeElement.id, { filmGrain: val }, true)}
+                      >
+                        <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                          <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                        </Slider.Track>
+                        <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                      </Slider.Root>
+                    </div>
+
+                    {/* Temperature */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
+                        <span>Temperature</span>
+                        <span className="font-mono">{imgEl.temperature || 0}</span>
+                      </div>
+                      <Slider.Root
+                        className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                        value={[imgEl.temperature || 0]}
+                        min={-100}
+                        max={100}
+                        step={1}
+                        onValueChange={([val]) => updateElement(activeElement.id, { temperature: val }, false)}
+                        onValueCommit={([val]) => updateElement(activeElement.id, { temperature: val }, true)}
+                      >
+                        <Slider.Track className="bg-gradient-to-r from-[#0066ff] via-surface-variant to-[#ffaa00] relative grow rounded-full h-1.5">
+                          <Slider.Range className="absolute bg-transparent rounded-full h-full" />
+                        </Slider.Track>
+                        <Slider.Thumb className="block w-4 h-4 bg-white shadow-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                      </Slider.Root>
+                    </div>
+                  </div>
+
                 </Popover.Content>
               </Popover.Portal>
             </Popover.Root>

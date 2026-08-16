@@ -58,6 +58,10 @@ export interface ImageElement extends BaseElement {
   contrast?: number;
   saturation?: number;
   grayscale?: boolean;
+  presetFilter?: string;
+  gradePreset?: string;
+  filmGrain?: number;
+  temperature?: number;
   flipX?: boolean;
   flipY?: boolean;
 }
@@ -129,6 +133,10 @@ export const ImageElementSchema = BaseElementSchema.extend({
   contrast: z.number().optional().default(0),
   saturation: z.number().optional().default(0),
   grayscale: z.boolean().optional().default(false),
+  presetFilter: z.string().optional().default('none'),
+  gradePreset: z.string().optional().default('none'),
+  filmGrain: z.number().optional().default(0),
+  temperature: z.number().optional().default(0),
   flipX: z.boolean().optional().default(false),
   flipY: z.boolean().optional().default(false),
 });
