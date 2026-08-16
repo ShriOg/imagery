@@ -192,6 +192,18 @@ export function CanvasWorkspace() {
     >
       {/* Subtle Studio Vignette Focus Overlay */}
       <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_140px_rgba(0,0,0,0.8)] z-10" />
+      
+      {/* Ambient background particles and glow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0 flex items-center justify-center">
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        {/* Soft glowing orb behind canvas */}
+        <motion.div 
+          animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.4, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute w-[60vw] h-[60vw] bg-primary/10 blur-[140px] rounded-full mix-blend-screen" 
+        />
+      </div>
 
       {/* Stage Pan/Zoom Transform Container */}
       <div
@@ -200,7 +212,7 @@ export function CanvasWorkspace() {
           transformOrigin: "center center",
           transition: isPanning ? "none" : "transform 0.05s ease-out",
         }}
-        className="relative flex items-center justify-center pointer-events-auto"
+        className="relative flex items-center justify-center pointer-events-auto z-0"
       >
         {/* Document Boundary Frame */}
         <div
@@ -211,8 +223,8 @@ export function CanvasWorkspace() {
           }}
           className={`rounded-md relative overflow-hidden transition-all duration-500 ${
             isGenerating
-              ? "ring-2 ring-primary shadow-[0_0_80px_rgba(251,188,0,0.6)] animate-breathe"
-              : "ring-1 ring-white/10 shadow-[0_0_60px_rgba(255,226,171,0.08),0_20px_60px_rgba(0,0,0,0.9),0_0_1px_1px_rgba(255,255,255,0.08)]"
+              ? "ring-2 ring-primary shadow-[0_0_120px_rgba(251,188,0,0.5)] animate-breathe"
+              : "ring-[1.5px] ring-white/30 shadow-[0_0_100px_rgba(255,226,171,0.2),0_20px_60px_rgba(0,0,0,1),0_0_3px_2px_rgba(255,255,255,0.15)]"
           }`}
         >
           {/* HTML5 Canvas instance for Fabric.js v6 */}
