@@ -44,6 +44,25 @@ export function useKeyboardShortcuts() {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
 
+      // Zoom Canvas: Cmd/Ctrl + Plus/Minus
+      if (cmdOrCtrl && (e.key === "=" || e.key === "+" || e.key === "-")) {
+        e.preventDefault();
+        const factor = e.key === "-" ? 1 / 1.1 : 1.1;
+        // Need to use the latest zoom value. Since zoom is primitive and we want to avoid stale closures,
+        // we can use a functional update if setZoom supports it, but Zustand setters don't by default unless we use getState().
+        // So we'll use useToolStore.getState().zoom
+        const currentZoom = useToolStore.getState().zoom;
+        useToolStore.getState().setZoom(Math.max(0.1, Math.min(5, currentZoom * factor)));
+        return;
+      }
+      
+      // Reset Zoom: Cmd/Ctrl + 0
+      if (cmdOrCtrl && e.key === "0") {
+        e.preventDefault();
+        useToolStore.getState().setZoom(1);
+        return;
+      }
+
       // Undo / Redo
       if (cmdOrCtrl && (e.key === "z" || e.key === "Z")) {
         e.preventDefault();

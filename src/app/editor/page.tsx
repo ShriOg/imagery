@@ -10,6 +10,7 @@ import { AssetPickerModal } from "@/components/panels/AssetPickerModal";
 import { ExportModal } from "@/components/modals/ExportModal";
 import { CropModal } from "@/components/modals/CropModal";
 import { CommandPalette } from "@/components/modals/CommandPalette";
+import { ContextMenu } from "@/components/modals/ContextMenu";
 
 export default function EditorPage() {
   return (
@@ -45,6 +46,7 @@ export default function EditorPage() {
       <ExportModal />
       <CropModal />
       <CommandPalette />
+      <ContextMenu />
     </div>
   );
 }
