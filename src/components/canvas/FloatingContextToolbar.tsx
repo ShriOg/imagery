@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import * as Popover from "@radix-ui/react-popover";
 import * as Slider from "@radix-ui/react-slider";
 import { useCanvasStore } from "@/store/useCanvasStore";
@@ -41,13 +41,13 @@ function useSelectionPosition() {
       const topY = canvasRect.top + rect.top * scale;
 
       const toolbarHeight = 56;
-      const margin = 20;
+      const margin = 16;
 
       let targetX = centerX;
       let targetY = bottomY + margin;
 
       // If opening below would overflow the bottom of the screen, place above
-      if (targetY + toolbarHeight > window.innerHeight - 24) {
+      if (targetY + toolbarHeight > window.innerHeight - 20) {
         targetY = Math.max(76, topY - toolbarHeight - margin);
       }
 
@@ -55,9 +55,18 @@ function useSelectionPosition() {
       targetX = Math.max(220, Math.min(window.innerWidth - 220, targetX));
       targetY = Math.max(76, Math.min(window.innerHeight - 70, targetY));
 
-      setCoords({ x: Math.round(targetX), y: Math.round(targetY) });
+      const roundedX = Math.round(targetX);
+      const roundedY = Math.round(targetY);
+
+      setCoords((prev) => {
+        if (prev && Math.abs(prev.x - roundedX) < 1 && Math.abs(prev.y - roundedY) < 1) {
+          return prev;
+        }
+        return { x: roundedX, y: roundedY };
+      });
     };
 
+    // Calculate position on selection change
     updatePosition();
 
     const fabricCanvas = (window as any).__imageryFabricCanvas;
@@ -70,7 +79,6 @@ function useSelectionPosition() {
     }
 
     window.addEventListener("resize", updatePosition);
-    const interval = setInterval(updatePosition, 120);
 
     return () => {
       if (fabricCanvas) {
@@ -81,7 +89,6 @@ function useSelectionPosition() {
         fabricCanvas.off("selection:updated", updatePosition);
       }
       window.removeEventListener("resize", updatePosition);
-      clearInterval(interval);
     };
   }, [selectedIds, zoom, pan]);
 
@@ -91,15 +98,12 @@ function useSelectionPosition() {
 export function FloatingContextToolbar() {
   const selectedIds = useCanvasStore((s) => s.selectedIds);
   const document = useCanvasStore((s) => s.document);
-  const updateElement = useCanvasStore((s) => s.updateElement);
   const duplicateSelected = useCanvasStore((s) => s.duplicateSelected);
-  const bringForward = useCanvasStore((s) => s.bringForward);
-  const sendBackward = useCanvasStore((s) => s.sendBackward);
   const removeSelected = useCanvasStore((s) => s.removeSelected);
-  const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
   const isMulti = selectedIds.length > 1;
   const activeElement = selectedIds.length === 1 ? document.elements.find((e) => e.id === selectedIds[0]) : null;
   const coords = useSelectionPosition();
+  const multiDragControls = useDragControls();
 
   return (
     <AnimatePresence>
@@ -107,6 +111,8 @@ export function FloatingContextToolbar() {
         <motion.div
           key="toolbar-multi"
           drag
+          dragControls={multiDragControls}
+          dragListener={false}
           dragMomentum={false}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -119,10 +125,11 @@ export function FloatingContextToolbar() {
           }
           className={`${
             coords ? "fixed" : "fixed bottom-6 left-1/2 -translate-x-1/2"
-          } flex items-center gap-4 px-6 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none cursor-default`}
+          } flex items-center gap-4 px-6 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none`}
         >
           <div
-            className="flex items-center justify-center p-1 text-on-surface-variant/40 hover:text-on-surface cursor-grab active:cursor-grabbing -ml-2 shrink-0"
+            onPointerDown={(e) => multiDragControls.start(e)}
+            className="flex items-center justify-center p-1 text-on-surface-variant/40 hover:text-on-surface cursor-grab active:cursor-grabbing -ml-2 shrink-0 touch-none"
             title="Drag to move toolbar"
           >
             <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
@@ -168,6 +175,7 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
   const removeSelected = useCanvasStore((s) => s.removeSelected);
   const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
   const { modifyImage, isGenerating } = useAIImageModifier();
+  const dragControls = useDragControls();
 
   // Local state for AI input
   const [aiPrompt, setAiPrompt] = React.useState("");
@@ -189,6 +197,8 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
     <motion.div
       key="toolbar-single"
       drag
+      dragControls={dragControls}
+      dragListener={false}
       dragMomentum={false}
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -201,11 +211,12 @@ function SingleElementToolbar({ activeElement, coords }: { activeElement: any; c
       }
       className={`${
         coords ? "fixed" : "fixed bottom-6 left-1/2 -translate-x-1/2"
-      } flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-2.5 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none max-w-[95vw] overflow-x-auto scrollbar-none cursor-default`}
+      } flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-2.5 border-sheen bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_24px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] border border-outline-variant/15 z-50 select-none max-w-[95vw]`}
     >
         {/* Drag handle */}
         <div
-          className="flex items-center justify-center p-1 text-on-surface-variant/40 hover:text-on-surface cursor-grab active:cursor-grabbing -ml-2 shrink-0 transition-colors"
+          onPointerDown={(e) => dragControls.start(e)}
+          className="flex items-center justify-center p-1 text-on-surface-variant/40 hover:text-on-surface cursor-grab active:cursor-grabbing -ml-2 shrink-0 transition-colors touch-none"
           title="Drag to reposition toolbar anywhere"
         >
           <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
