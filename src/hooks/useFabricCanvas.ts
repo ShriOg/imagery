@@ -445,8 +445,9 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
 
           if (el.type === "text" && existing.type === "textbox") {
             const textEl = el as TextElement;
+            const displayContent = textEl.uppercase ? textEl.content.toUpperCase() : textEl.content;
             (existing as fabric.Textbox).set({
-              text: textEl.content,
+              text: displayContent,
               fontFamily: textEl.fontFamily,
               fontSize: textEl.fontSize,
               fontWeight: textEl.fontWeight,
@@ -455,6 +456,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
               lineHeight: textEl.lineHeight,
               charSpacing: textEl.letterSpacing * 10,
               underline: textEl.underline,
+              linethrough: textEl.strikethrough || false,
               fontStyle: textEl.italic ? "italic" : "normal",
               width: textEl.width,
             });

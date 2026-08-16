@@ -17,12 +17,13 @@ export function ExportModal() {
   const [transparentBg, setTransparentBg] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
+  const [cropToContent, setCropToContent] = useState<boolean>(true);
+
   const handleExport = () => {
     setIsExporting(true);
 
     setTimeout(() => {
       try {
-        // Find the active HTML canvas
         const canvasEl = window.document.querySelector("canvas.lower-canvas") as HTMLCanvasElement;
         const fabricCanvas = (canvasEl as any)?.__fabric || (window as any).__imageryFabricCanvas;
 
@@ -30,10 +31,9 @@ export function ExportModal() {
         const filename = `${document.title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${dateStr}`;
 
         if (fabricCanvas) {
-          // Store and discard active selection to avoid exporting bounding boxes
           const activeObj = fabricCanvas.getActiveObject();
           fabricCanvas.discardActiveObject();
-          
+
           const origBg = fabricCanvas.backgroundColor;
           if (transparentBg && (format === "png" || format === "webp")) {
             fabricCanvas.backgroundColor = "transparent";
@@ -49,26 +49,59 @@ export function ExportModal() {
             link.href = url;
             link.click();
             URL.revokeObjectURL(url);
+          } else if (cropToContent) {
+            // --- CROP TO CONTENT: compute bounding box of all objects ---
+            const objects = fabricCanvas.getObjects();
+            if (objects.length === 0) {
+              // Nothing to crop — fall back to full canvas
+              const dataURL = fabricCanvas.toDataURL({ format, multiplier, quality: 0.95 });
+              const link = window.document.createElement("a");
+              link.download = `${filename}.${format}`;
+              link.href = dataURL;
+              link.click();
+            } else {
+              // Find tight bounding box across all objects
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              objects.forEach((obj: any) => {
+                const bounds = obj.getBoundingRect(true); // absolute coords
+                minX = Math.min(minX, bounds.left);
+                minY = Math.min(minY, bounds.top);
+                maxX = Math.max(maxX, bounds.left + bounds.width);
+                maxY = Math.max(maxY, bounds.top + bounds.height);
+              });
+
+              const contentW = maxX - minX;
+              const contentH = maxY - minY;
+
+              // Use toDataURL with viewport crop
+              const dataURL = fabricCanvas.toDataURL({
+                format,
+                quality: 0.95,
+                multiplier,
+                left: minX,
+                top: minY,
+                width: contentW,
+                height: contentH,
+              });
+
+              const link = window.document.createElement("a");
+              link.download = `${filename}.${format}`;
+              link.href = dataURL;
+              link.click();
+            }
           } else {
-            const dataURL = fabricCanvas.toDataURL({
-              format,
-              multiplier,
-              quality: 0.95,
-            });
+            // Full artboard export
+            const dataURL = fabricCanvas.toDataURL({ format, multiplier, quality: 0.95 });
             const link = window.document.createElement("a");
             link.download = `${filename}.${format}`;
             link.href = dataURL;
             link.click();
           }
 
-          // Restore background and selection
           fabricCanvas.backgroundColor = origBg;
-          if (activeObj) {
-            fabricCanvas.setActiveObject(activeObj);
-          }
+          if (activeObj) fabricCanvas.setActiveObject(activeObj);
           fabricCanvas.requestRenderAll();
         } else if (canvasEl) {
-          // Fallback direct canvas export
           const dataURL = canvasEl.toDataURL(`image/${format}`, 0.95);
           const link = window.document.createElement("a");
           link.download = `${filename}.${format}`;
@@ -164,18 +197,50 @@ export function ExportModal() {
             </div>
           )}
 
-          {/* Transparent Background Option */}
-          {(format === "png" || format === "webp") && (
-            <label className="flex items-center gap-2.5 text-xs text-zinc-300 cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                checked={transparentBg}
-                onChange={(e) => setTransparentBg(e.target.checked)}
-                className="rounded bg-zinc-800 border-zinc-700 text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer"
-              />
-              <span>Transparent Background</span>
+          {/* Crop to Content + Transparent Bg */}
+          <div className="flex flex-col gap-2 pt-1">
+            <label className="flex items-center justify-between gap-2.5 text-xs text-zinc-300 cursor-pointer bg-zinc-800/50 rounded-xl px-3 py-2.5 border border-zinc-700/30 hover:border-zinc-600/40 transition-colors">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px] text-amber-400">crop_free</span>
+                <div>
+                  <div className="font-semibold text-zinc-200">Crop to Content</div>
+                  <div className="text-[10px] text-zinc-500">Export only the image area, no black borders</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setCropToContent((v) => !v)}
+                className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer shrink-0 ${
+                  cropToContent ? "bg-amber-500" : "bg-zinc-700"
+                }`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all ${
+                  cropToContent ? "left-4.5" : "left-0.5"
+                }`} />
+              </button>
             </label>
-          )}
+
+            {(format === "png" || format === "webp") && (
+              <label className="flex items-center justify-between gap-2.5 text-xs text-zinc-300 cursor-pointer bg-zinc-800/50 rounded-xl px-3 py-2.5 border border-zinc-700/30 hover:border-zinc-600/40 transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-zinc-400">layers_clear</span>
+                  <div>
+                    <div className="font-semibold text-zinc-200">Transparent Background</div>
+                    <div className="text-[10px] text-zinc-500">Removes canvas background colour</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setTransparentBg((v) => !v)}
+                  className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer shrink-0 ${
+                    transparentBg ? "bg-amber-500" : "bg-zinc-700"
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all ${
+                    transparentBg ? "left-4.5" : "left-0.5"
+                  }`} />
+                </button>
+              </label>
+            )}
+          </div>
 
           {/* Export Action Button */}
           <button

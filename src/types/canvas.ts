@@ -35,6 +35,8 @@ export interface TextElement extends BaseElement {
   letterSpacing: number;
   underline: boolean;
   italic: boolean;
+  strikethrough?: boolean;
+  uppercase?: boolean;
 }
 
 export interface ShapeElement extends BaseElement {
@@ -110,6 +112,8 @@ export const TextElementSchema = BaseElementSchema.extend({
   letterSpacing: z.number().default(0),
   underline: z.boolean().default(false),
   italic: z.boolean().default(false),
+  strikethrough: z.boolean().optional().default(false),
+  uppercase: z.boolean().optional().default(false),
 });
 
 export const ShapeElementSchema = BaseElementSchema.extend({
