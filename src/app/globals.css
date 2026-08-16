@@ -1,18 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --bg-main: #101010;
-  --bg-panel: #171717;
-  --bg-hover: #222222;
-  --border: #2a2a2a;
-  --text-primary: #ececec;
-  --text-muted: #888888;
-  --accent: #f3e8d6;
-  --accent-text: #101010;
-  --accent-hover: #e5dac8;
-  
-  --canvas-bg: #1a1a2e;
-  --dot-color: rgba(255, 255, 255, 0.05);
+  --bg-workspace: #121214;
+  --bg-panel: rgba(24, 24, 27, 0.75);
+  --bg-floating: rgba(32, 32, 36, 0.92);
+  --border-studio: rgba(63, 63, 70, 0.4);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --accent-amber: #F59E0B;
+  --accent-amber-dark: #D97706;
+  --accent-cream: #F5F5F0;
+  --text-muted: #A1A1AA;
+  --text-primary: #FAFAFA;
 }
 
 * {
@@ -22,59 +24,73 @@
 }
 
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-workspace);
   color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-button {
-  background: none;
-  border: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.primary-btn {
-  background-color: var(--accent);
-  color: var(--accent-text);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.primary-btn:hover:not(:disabled) {
-  background-color: var(--accent-hover);
-}
-
-.icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  color: var(--text-muted);
-  transition: all 0.2s;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.dot-grid-bg {
-  background-color: var(--bg-main);
-  background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+/* Studio Dot Grid Background */
+.studio-dot-grid {
+  background-color: #121214;
+  background-image: radial-gradient(circle, #27272a 1.25px, transparent 1.25px);
   background-size: 20px 20px;
+}
+
+/* Glassmorphic Utilities */
+.glass-panel {
+  background: rgba(24, 24, 27, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(63, 63, 70, 0.45);
+}
+
+.glass-floating {
+  background: rgba(32, 32, 36, 0.92);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.glass-pill {
+  background: rgba(28, 28, 32, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Canvas Shadow Frame */
+.canvas-shadow-frame {
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 20px 50px -10px rgba(0, 0, 0, 0.7),
+    0 40px 100px -20px rgba(0, 0, 0, 0.9);
+}
+
+/* Selection Marquee & Controls Custom Styles */
+.fabric-custom-controls {
+  outline: none;
 }

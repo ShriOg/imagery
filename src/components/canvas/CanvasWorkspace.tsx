@@ -1,129 +1,162 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import FabricCanvas from "./FabricCanvas";
-import { useCanvasStore } from "@/lib/store/canvas-store";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useFabricCanvas } from "@/hooks/useFabricCanvas";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useToolStore } from "@/store/useToolStore";
+import { useCanvasStore } from "@/store/useCanvasStore";
+import { FloatingContextToolbar } from "./FloatingContextToolbar";
+import { ImageElement } from "@/types/canvas";
 
-export default function CanvasWorkspace() {
-  const undo = useCanvasStore((s) => s.undo);
-  const redo = useCanvasStore((s) => s.redo);
-  const canvasState = useCanvasStore((s) => s.canvas);
-  const [mounted, setMounted] = useState(false);
+export function CanvasWorkspace() {
+  const canvasElRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
+
+  // Initialize Fabric v6 canvas & synchronization engine
+  const { fabricCanvas } = useFabricCanvas(canvasElRef);
+
+  const document = useCanvasStore((s) => s.document);
+  const addElement = useCanvasStore((s) => s.addElement);
+  const zoom = useToolStore((s) => s.zoom);
+  const setZoom = useToolStore((s) => s.setZoom);
+  const pan = useToolStore((s) => s.pan);
+  const setPan = useToolStore((s) => s.setPan);
+  const activeTool = useToolStore((s) => s.activeTool);
+  const isSpacePressed = useToolStore((s) => s.isSpacePressed);
+
+  const [isPanning, setIsPanning] = useState(false);
+  const startPanRef = useRef({ x: 0, y: 0 });
+
+  // Store fabric instance on window for export access
   useEffect(() => {
-    setMounted(true);
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      }
-      if (((e.ctrlKey || e.metaKey) && e.key === "z" && e.shiftKey) || ((e.ctrlKey || e.metaKey) && e.key === "y")) {
-        e.preventDefault();
-        redo();
-      }
-    };
+    if (fabricCanvas) {
+      (window as any).__imageryFabricCanvas = fabricCanvas;
+    }
+  }, [fabricCanvas]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo]);
+  // Smooth mouse wheel zoom / pan
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.08 : -0.08;
+        setZoom((prev) => Math.min(3.0, Math.max(0.15, Number((prev + delta).toFixed(2)))));
+      } else {
+        // Trackpad two-finger pan
+        setPan((prev) => ({
+          x: prev.x - e.deltaX * 0.8,
+          y: prev.y - e.deltaY * 0.8,
+        }));
+      }
+    },
+    [setZoom, setPan]
+  );
 
-  const isEmpty = canvasState.elements.length === 0;
+  // Panning mouse handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (activeTool === "hand" || isSpacePressed || e.button === 1) {
+      setIsPanning(true);
+      startPanRef.current = {
+        x: e.clientX - pan.x,
+        y: e.clientY - pan.y,
+      };
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      setPan({
+        x: e.clientX - startPanRef.current.x,
+        y: e.clientY - startPanRef.current.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  // Drag and drop image files directly onto canvas
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (typeof event.target?.result === "string") {
+          const id = `el_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+          const imageEl: ImageElement = {
+            id,
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            type: "image",
+            src: event.target.result,
+            x: 540,
+            y: 540,
+            width: 480,
+            height: 480,
+            aspectRatio: 1,
+            rotation: 0,
+            opacity: 1,
+            zIndex: 0,
+            locked: false,
+            visible: true,
+            flipX: false,
+            flipY: false,
+          };
+          addElement(imageEl);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const isHandActive = activeTool === "hand" || isSpacePressed;
 
   return (
-    <div className="dot-grid-bg" style={{ 
-      flex: 1, 
-      display: "flex", 
-      flexDirection: "column",
-      alignItems: "center", 
-      position: "relative",
-      overflow: "hidden" 
-    }}>
-      
-      {/* Floating Canvas Header (Top pill) */}
-      <div style={{
-        marginTop: "24px",
-        marginBottom: "24px",
-        display: "flex",
-        alignItems: "center",
-        backgroundColor: "var(--bg-main)",
-        border: "1px solid var(--border)",
-        borderRadius: "8px",
-        padding: "6px 12px",
-        gap: "16px",
-        color: "var(--text-muted)",
-        fontSize: "12px",
-        zIndex: 10,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-      }}>
-        <button style={{ display: "flex", alignItems: "center", justifyContent: "center" }} title="Lock Canvas">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        </button>
-        <div style={{ height: "14px", width: "1px", backgroundColor: "var(--border)" }}></div>
-        <span style={{ fontFamily: "Space Mono, monospace" }}>
-          {canvasState.width} × {canvasState.height}
-        </span>
-        <div style={{ height: "14px", width: "1px", backgroundColor: "var(--border)" }}></div>
-        <button style={{ display: "flex", alignItems: "center", justifyContent: "center" }} title="Fullscreen">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
-        </button>
-      </div>
+    <main
+      ref={containerRef}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleDrop}
+      className={`relative w-full h-[calc(100vh-3.5rem)] overflow-hidden studio-dot-grid flex items-center justify-center select-none ${
+        isHandActive
+          ? isPanning
+            ? "cursor-grabbing"
+            : "cursor-grab"
+          : "cursor-default"
+      }`}
+    >
+      {/* Floating Context Toolbar */}
+      <FloatingContextToolbar />
 
-      {/* Canvas Container with subtle shadow and border to separate from grid */}
-      <div style={{ 
-        position: "relative",
-        border: "1px solid rgba(255,255,255,0.05)",
-        boxShadow: "0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.5)",
-        borderRadius: "2px",
-        overflow: "hidden", // ensures empty state overlay clips to canvas
-      }}>
-        
-        {/* The actual FabricCanvas */}
-        <FabricCanvas />
-
-        {/* Empty State Overlay */}
-        {mounted && isEmpty && (
-          <div style={{
-            position: "absolute",
-            top: 0, left: 0, right: 0, bottom: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-            backgroundColor: "rgba(26, 26, 46, 0.5)", // slight tint over the canvas bg
-            backdropFilter: "blur(2px)",
-          }}>
-            <div style={{
-              width: "48px", height: "48px",
-              border: "1px dashed var(--text-muted)",
-              borderRadius: "8px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: "24px",
-              color: "var(--accent)"
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-              </svg>
-            </div>
-            
-            <h3 style={{ fontSize: "20px", fontWeight: 500, color: "var(--text-primary)", marginBottom: "12px" }}>
-              Describe your design
-            </h3>
-            
-            <p style={{ fontSize: "14px", color: "var(--text-muted)", maxWidth: "260px", textAlign: "center", lineHeight: 1.5 }}>
-              Use the AI Assistant to create, transform, and arrange your design.
-            </p>
-            
-            {/* Arrow pointing right towards AI panel */}
-            <div style={{ position: "absolute", right: "60px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", opacity: 0.5 }}>
-              <svg width="60" height="20" viewBox="0 0 60 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 10C20 10 40 10 58 10M58 10C53 5 48 2 48 2M58 10C53 15 48 18 48 18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-        )}
+      {/* Stage Pan/Zoom Transform Container */}
+      <div
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          transformOrigin: "center center",
+          transition: isPanning ? "none" : "transform 0.05s ease-out",
+        }}
+        className="relative flex items-center justify-center pointer-events-auto"
+      >
+        {/* Document Boundary Frame */}
+        <div
+          style={{
+            width: document.width,
+            height: document.height,
+            backgroundColor: document.backgroundColor,
+          }}
+          className="canvas-shadow-frame rounded-sm relative overflow-hidden transition-colors"
+        >
+          {/* HTML5 Canvas instance for Fabric.js v6 */}
+          <canvas ref={canvasElRef} />
+        </div>
       </div>
-      
-    </div>
+    </main>
   );
 }

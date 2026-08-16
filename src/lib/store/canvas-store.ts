@@ -21,13 +21,28 @@ interface CanvasStoreState {
   isAnimating: boolean;
   setAnimating: (val: boolean) => void;
 
+  // Viewport Zoom
+  zoom: number;
+  setZoom: (val: number) => void;
+
   // Export trigger
   exportRequested: number;
   requestExport: () => void;
 
+  // Manual Editor State
+  activeTool: 'select' | 'text' | 'shape' | 'image';
+  setActiveTool: (tool: 'select' | 'text' | 'shape' | 'image') => void;
+  activeShapeType: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'line';
+  setActiveShapeType: (shape: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'line') => void;
+  
+  selectedIds: string[];
+  setSelectedIds: (ids: string[]) => void;
+
   // Actions
   updateCanvas: (newState: CanvasState) => void;
   updateCanvasFromAI: (newState: CanvasState) => void;
+  addElement: (element: CanvasElement) => void;
+  updateZIndex: (id: string, action: 'forward' | 'backward' | 'front' | 'back') => void;
   updateElement: (id: string, updates: Partial<CanvasElement>) => void;
   removeElement: (id: string) => void;
   
@@ -91,11 +106,25 @@ export const useCanvasStore = create<CanvasStoreState>()(
     setAiError: (msg) => set((state) => { state.aiErrorMessage = msg; }),
     addMessage: (msg) => set((state) => { state.messages.push(msg); }),
     setAnimating: (val) => set((state) => { state.isAnimating = val; }),
+    
+    zoom: 1,
+    setZoom: (val) => set((state) => { state.zoom = val; }),
+
     requestExport: () => set((state) => { state.exportRequested += 1; }),
+
+    activeTool: 'select',
+    setActiveTool: (tool) => set((state) => { state.activeTool = tool; }),
+    activeShapeType: 'rectangle',
+    setActiveShapeType: (shape) => set((state) => { state.activeShapeType = shape; }),
+    
+    selectedIds: [],
+    setSelectedIds: (ids) => set((state) => { state.selectedIds = ids; }),
 
     setInternalUpdate: (val) => set((state) => { state.isInternalUpdate = val; }),
 
     commit: () => set((state) => {
+      // Always ensure elements are sorted by zIndex before committing
+      state.canvas.elements.sort((a, b) => a.zIndex - b.zIndex);
       state.past.push(JSON.parse(JSON.stringify(state.canvas)));
       if (state.past.length > MAX_HISTORY) {
         state.past.shift();
@@ -124,9 +153,60 @@ export const useCanvasStore = create<CanvasStoreState>()(
       }
     }),
 
+    addElement: (element) => set((state) => {
+      get().commit();
+      // Auto assign highest zIndex
+      const maxZIndex = state.canvas.elements.reduce((max, el) => Math.max(max, el.zIndex), 0);
+      element.zIndex = maxZIndex + 1;
+      state.canvas.elements.push(element);
+    }),
+
     removeElement: (id) => set((state) => {
       get().commit();
       state.canvas.elements = state.canvas.elements.filter(e => e.id !== id);
+      state.selectedIds = state.selectedIds.filter(selectedId => selectedId !== id);
+    }),
+
+    updateZIndex: (id, action) => set((state) => {
+      get().commit();
+      const elements = state.canvas.elements;
+      const index = elements.findIndex(e => e.id === id);
+      if (index === -1) return;
+
+      const el = elements[index];
+      
+      switch (action) {
+        case 'front':
+          const maxZ = Math.max(...elements.map(e => e.zIndex), 0);
+          el.zIndex = maxZ + 1;
+          break;
+        case 'back':
+          const minZ = Math.min(...elements.map(e => e.zIndex), 0);
+          el.zIndex = minZ - 1;
+          break;
+        case 'forward': {
+          // Find element immediately above it in zIndex
+          const above = elements.filter(e => e.zIndex > el.zIndex).sort((a, b) => a.zIndex - b.zIndex)[0];
+          if (above) {
+            const temp = el.zIndex;
+            el.zIndex = above.zIndex;
+            above.zIndex = temp;
+          }
+          break;
+        }
+        case 'backward': {
+          // Find element immediately below it in zIndex
+          const below = elements.filter(e => e.zIndex < el.zIndex).sort((a, b) => b.zIndex - a.zIndex)[0];
+          if (below) {
+            const temp = el.zIndex;
+            el.zIndex = below.zIndex;
+            below.zIndex = temp;
+          }
+          break;
+        }
+      }
+      
+      state.canvas.elements.sort((a, b) => a.zIndex - b.zIndex);
     }),
 
     undo: () => set((state) => {
