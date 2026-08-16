@@ -42,7 +42,7 @@ Important rules:
       NIM_MODEL = "meta/llama-3.1-70b-instruct";
     }
 
-    const schema = zodToJsonSchema(CanvasDocumentSchema, "canvas_document");
+    const schema = zodToJsonSchema(CanvasDocumentSchema as any, "canvas_document");
 
     const response = await fetch(`${NIM_BASE_URL}/chat/completions`, {
       method: "POST",
