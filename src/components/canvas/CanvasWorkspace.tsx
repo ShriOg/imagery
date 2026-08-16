@@ -183,6 +183,8 @@ export function CanvasWorkspace() {
           ? isPanning
             ? "cursor-grabbing"
             : "cursor-grab"
+          : (activeTool === "shape" || activeTool === "text")
+          ? "cursor-crosshair"
           : "cursor-default"
       }`}
     >

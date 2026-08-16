@@ -79,18 +79,27 @@ export function CommandPalette() {
             initial={{ opacity: 0, y: -40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -30, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="relative w-full max-w-2xl p-[1.5px] rounded-3xl bg-gradient-to-r from-primary-fixed-dim/60 via-purple-500/40 to-primary/60 shadow-[0_20px_70px_rgba(0,0,0,0.8),0_0_40px_rgba(251,188,0,0.2)] overflow-hidden"
+            transition={{ type: "spring", stiffness: 450, damping: 30 }}
+            className={`relative w-full max-w-2xl p-[2px] rounded-3xl overflow-hidden transition-all duration-500 ${
+              isGenerating
+                ? "shadow-[0_20px_80px_rgba(0,0,0,0.9),0_0_50px_rgba(251,188,0,0.35)] ring-1 ring-primary/40"
+                : "shadow-[0_20px_70px_rgba(0,0,0,0.8),0_0_40px_rgba(251,188,0,0.15)] bg-gradient-to-r from-primary-fixed-dim/60 via-purple-500/40 to-primary/60"
+            }`}
           >
-            <div className="relative bg-surface-container/95 backdrop-blur-3xl rounded-[23px] p-5 flex flex-col gap-4">
+            {/* High-Tech Shimmer Conic Gradient Border when Generating */}
+            {isGenerating && (
+              <div className="absolute -inset-[150%] animate-spin-slow bg-[conic-gradient(from_0deg,#ffe2ab_0%,#fbbc00_25%,transparent_50%,#ffe2ab_100%)] opacity-90 blur-[1px]" />
+            )}
+
+            <div className="relative bg-surface-container/98 backdrop-blur-3xl rounded-[22px] p-5 flex flex-col gap-4">
               {/* Top Row: AI Icon, Input, Shortcut Badge */}
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-2xl flex items-center justify-center transition-all ${
                   isGenerating 
-                    ? "bg-primary text-on-primary animate-spin" 
+                    ? "bg-primary text-on-primary shadow-[0_0_15px_rgba(251,188,0,0.6)]" 
                     : "bg-primary/20 text-primary"
                 }`}>
-                  <span className="material-symbols-outlined text-[20px]">
+                  <span className={`material-symbols-outlined text-[20px] ${isGenerating ? "animate-spin" : ""}`}>
                     {isGenerating ? "progress_activity" : "auto_awesome"}
                   </span>
                 </div>
@@ -105,7 +114,11 @@ export function CommandPalette() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleExecutePrompt(prompt);
                     }}
-                    placeholder={isGenerating ? "AI is styling your canvas..." : "Ask AI to generate, style, or arrange..."}
+                    placeholder={
+                      isGenerating 
+                        ? "Harmonizing canvas layout with Nemotron AI..." 
+                        : "Ask AI to generate, style, or arrange..."
+                    }
                     className={`w-full bg-transparent text-lg sm:text-xl font-medium outline-none transition-colors ${
                       isGenerating
                         ? "text-primary animate-pulse font-semibold"

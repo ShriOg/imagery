@@ -18,21 +18,19 @@ export function FloatingContextToolbar() {
   const removeSelected = useCanvasStore((s) => s.removeSelected);
   const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
 
-  if (selectedIds.length === 0) return null;
-
-  const activeElement = document.elements.find((e) => e.id === selectedIds[0]);
-  if (!activeElement) return null;
-
   const isMulti = selectedIds.length > 1;
+  const activeElement = selectedIds.length === 1 ? document.elements.find((e) => e.id === selectedIds[0]) : null;
 
-  if (isMulti) {
-    return (
-      <AnimatePresence>
+  return (
+    <AnimatePresence>
+      {isMulti && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          key="toolbar-multi"
+          layout
+          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 450, damping: 28 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-5 px-7 py-3.5 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-outline-variant/15 z-30 select-none"
         >
           <span className="font-body-md text-xs sm:text-sm font-medium text-on-surface">
@@ -58,9 +56,23 @@ export function FloatingContextToolbar() {
             <span className="material-symbols-outlined text-[18px]">delete</span>
           </motion.button>
         </motion.div>
-      </AnimatePresence>
-    );
-  }
+      )}
+
+      {!isMulti && activeElement && (
+        <SingleElementToolbar activeElement={activeElement} />
+      )}
+    </AnimatePresence>
+  );
+}
+
+function SingleElementToolbar({ activeElement }: { activeElement: any }) {
+  const document = useCanvasStore((s) => s.document);
+  const updateElement = useCanvasStore((s) => s.updateElement);
+  const duplicateSelected = useCanvasStore((s) => s.duplicateSelected);
+  const bringForward = useCanvasStore((s) => s.bringForward);
+  const sendBackward = useCanvasStore((s) => s.sendBackward);
+  const removeSelected = useCanvasStore((s) => s.removeSelected);
+  const setCropModalOpen = useToolStore((s) => s.setCropModalOpen);
 
   // Extract element properties
   const isText = activeElement.type === "text";
@@ -75,14 +87,15 @@ export function FloatingContextToolbar() {
   const fill = isText ? textEl.fill : isShape ? shapeEl.fill : null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-5 px-6 sm:px-7 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-outline-variant/15 z-30 select-none max-w-[95vw] overflow-x-auto scrollbar-none"
-      >
+    <motion.div
+      key="toolbar-single"
+      layout
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 450, damping: 28 }}
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-5 px-6 sm:px-7 py-3 bg-surface-container-high/95 backdrop-blur-3xl rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-outline-variant/15 z-30 select-none max-w-[95vw] overflow-x-auto scrollbar-none"
+    >
         {/* IMAGE SPECIFIC: Crop & Flip */}
         {isImage && (
           <>
@@ -598,7 +611,6 @@ export function FloatingContextToolbar() {
           </motion.button>
         </div>
       </motion.div>
-    </AnimatePresence>
   );
 }
 

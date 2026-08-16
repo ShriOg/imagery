@@ -42,56 +42,96 @@ export function LeftRail() {
       : "p-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none cursor-pointer";
 
   return (
-    <div className="absolute top-6 left-6 bottom-6 w-16 bg-surface-container/90 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 z-20 flex flex-col items-center py-6 gap-2 select-none">
+    <div className="absolute top-6 left-6 bottom-6 w-16 bg-surface-container/90 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 z-20 flex flex-col items-center py-6 gap-2 select-none border border-outline-variant/10">
+      {/* Select Tool */}
       <motion.button 
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={getButtonClass(activeTool === "select")}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className={`relative p-3 rounded-xl transition-colors outline-none cursor-pointer ${
+          activeTool === "select" ? "text-primary" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40"
+        }`}
         onClick={() => handleToolSelect("select")}
         title="Select Tool (V)"
       >
-        <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "select" ? "'FILL' 1" : "'FILL' 0" }}>
+        {activeTool === "select" && (
+          <motion.div
+            layoutId="activeToolIndicator"
+            className="absolute inset-0 bg-primary/20 border border-primary/40 rounded-xl shadow-[0_0_15px_rgba(251,188,0,0.15)]"
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          />
+        )}
+        <span className="relative z-10 material-symbols-outlined" style={{ fontVariationSettings: activeTool === "select" ? "'FILL' 1" : "'FILL' 0" }}>
           arrow_selector_tool
         </span>
       </motion.button>
 
+      {/* Hand / Pan Tool */}
       <motion.button 
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={getButtonClass(activeTool === "hand")}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className={`relative p-3 rounded-xl transition-colors outline-none cursor-pointer ${
+          activeTool === "hand" ? "text-primary" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40"
+        }`}
         onClick={() => handleToolSelect("hand")}
         title="Pan Tool (H or Spacebar)"
       >
-        <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "hand" ? "'FILL' 1" : "'FILL' 0" }}>
+        {activeTool === "hand" && (
+          <motion.div
+            layoutId="activeToolIndicator"
+            className="absolute inset-0 bg-primary/20 border border-primary/40 rounded-xl shadow-[0_0_15px_rgba(251,188,0,0.15)]"
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          />
+        )}
+        <span className="relative z-10 material-symbols-outlined" style={{ fontVariationSettings: activeTool === "hand" ? "'FILL' 1" : "'FILL' 0" }}>
           pan_tool
         </span>
       </motion.button>
 
+      {/* Text Tool */}
       <motion.button 
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={getButtonClass(activeTool === "text")}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className={`relative p-3 rounded-xl transition-colors outline-none cursor-pointer ${
+          activeTool === "text" ? "text-primary" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40"
+        }`}
         onClick={() => handleToolSelect("text")}
         title="Text Tool (T)"
       >
-        <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "text" ? "'FILL' 1" : "'FILL' 0" }}>
+        {activeTool === "text" && (
+          <motion.div
+            layoutId="activeToolIndicator"
+            className="absolute inset-0 bg-primary/20 border border-primary/40 rounded-xl shadow-[0_0_15px_rgba(251,188,0,0.15)]"
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          />
+        )}
+        <span className="relative z-10 material-symbols-outlined" style={{ fontVariationSettings: activeTool === "text" ? "'FILL' 1" : "'FILL' 0" }}>
           text_fields
         </span>
       </motion.button>
 
+      {/* Shapes Tool */}
       <Popover.Root open={isShapeMenuOpen} onOpenChange={setIsShapeMenuOpen}>
         <Popover.Trigger asChild>
           <motion.button 
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            className={getButtonClass(activeTool === "shape")}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`relative p-3 rounded-xl transition-colors outline-none cursor-pointer ${
+              activeTool === "shape" ? "text-primary" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40"
+            }`}
             onClick={() => {
               setActiveTool("shape");
               setIsShapeMenuOpen(true);
             }}
             title="Shapes (U)"
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "shape" ? "'FILL' 1" : "'FILL' 0" }}>
+            {activeTool === "shape" && (
+              <motion.div
+                layoutId="activeToolIndicator"
+                className="absolute inset-0 bg-primary/20 border border-primary/40 rounded-xl shadow-[0_0_15px_rgba(251,188,0,0.15)]"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10 material-symbols-outlined" style={{ fontVariationSettings: activeTool === "shape" ? "'FILL' 1" : "'FILL' 0" }}>
               category
             </span>
           </motion.button>
@@ -127,26 +167,30 @@ export function LeftRail() {
         </Popover.Portal>
       </Popover.Root>
 
+      {/* Asset / Image Tool */}
       <motion.button 
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={getButtonClass(false)}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="relative p-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 rounded-xl transition-colors outline-none cursor-pointer"
         onClick={() => handleToolSelect("image")}
         title="Asset Library / Upload"
       >
-        <span className="material-symbols-outlined">image</span>
+        <span className="relative z-10 material-symbols-outlined">image</span>
       </motion.button>
 
       <div className="flex-1"></div>
 
+      {/* Layer Drawer Toggle */}
       <motion.button 
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={getButtonClass(isLayerDrawerOpen)}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className={`relative p-3 rounded-xl transition-colors outline-none cursor-pointer ${
+          isLayerDrawerOpen ? "text-primary bg-primary/15 border border-primary/30" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40"
+        }`}
         onClick={toggleLayerDrawer}
         title="Layer Stack Drawer"
       >
-        <span className="material-symbols-outlined" style={{ fontVariationSettings: isLayerDrawerOpen ? "'FILL' 1" : "'FILL' 0" }}>
+        <span className="relative z-10 material-symbols-outlined" style={{ fontVariationSettings: isLayerDrawerOpen ? "'FILL' 1" : "'FILL' 0" }}>
           layers
         </span>
       </motion.button>

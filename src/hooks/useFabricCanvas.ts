@@ -32,6 +32,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
   const fabricRef = useRef<fabric.Canvas | null>(null);
   const isInternalUpdateRef = useRef(false);
   const guideLinesRef = useRef<fabric.Line[]>([]);
+  const isSnappedRef = useRef(false);
 
   const document = useCanvasStore((s) => s.document);
   const selectedIds = useCanvasStore((s) => s.selectedIds);
@@ -44,6 +45,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
   const activeTool = useToolStore((s) => s.activeTool);
   const activeShapeKind = useToolStore((s) => s.activeShapeKind);
   const setActiveTool = useToolStore((s) => s.setActiveTool);
+  const isSpacePressed = useToolStore((s) => s.isSpacePressed);
 
   // Clear alignment guide lines
   const clearGuides = useCallback(() => {
@@ -53,17 +55,21 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
     fabricRef.current.requestRenderAll();
   }, []);
 
-  // Draw alignment guide line
+  // Draw alignment guide line with glowing amber style
   const drawGuide = useCallback((x1: number, y1: number, x2: number, y2: number) => {
     if (!fabricRef.current) return;
     const guide = new fabric.Line([x1, y1, x2, y2], {
       stroke: "#fbbc00",
-      strokeWidth: 1.2,
-      strokeDashArray: [5, 5],
+      strokeWidth: 1.5,
+      strokeDashArray: [4, 4],
       selectable: false,
       evented: false,
-      opacity: 0.9,
+      opacity: 0.95,
       excludeFromExport: true,
+      shadow: new fabric.Shadow({
+        color: "rgba(251, 188, 0, 0.7)",
+        blur: 6,
+      }),
     });
     (guide as any).isGuide = true;
     guideLinesRef.current.push(guide);
@@ -804,11 +810,38 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
 
         if (snappedX && snappedY) break;
       }
+
+      // Tactile physical snapping pulse feedback
+      if ((snappedX || snappedY) && !isSnappedRef.current) {
+        isSnappedRef.current = true;
+        const currentScaleX = target.scaleX || 1;
+        const currentScaleY = target.scaleY || 1;
+        target.set({
+          scaleX: currentScaleX * 1.015,
+          scaleY: currentScaleY * 1.015,
+        });
+        target.dirty = true;
+        canvas.requestRenderAll();
+
+        setTimeout(() => {
+          if (target && fabricRef.current) {
+            target.set({
+              scaleX: currentScaleX,
+              scaleY: currentScaleY,
+            });
+            target.dirty = true;
+            fabricRef.current.requestRenderAll();
+          }
+        }, 50);
+      } else if (!snappedX && !snappedY) {
+        isSnappedRef.current = false;
+      }
     });
 
     // Clear guides on mouse release
     canvas.on("mouse:up", () => {
       clearGuides();
+      isSnappedRef.current = false;
     });
 
     // Tool click insertion on canvas stage
@@ -895,6 +928,22 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
       fabricRef.current = null;
     };
   }, []); // Run once on mount
+
+  // Synchronize Fabric cursor state with active tool
+  useEffect(() => {
+    if (!fabricRef.current) return;
+    const canvas = fabricRef.current;
+    if (activeTool === "hand" || isSpacePressed) {
+      canvas.defaultCursor = "grab";
+      canvas.hoverCursor = "grab";
+    } else if (activeTool === "shape" || activeTool === "text") {
+      canvas.defaultCursor = "crosshair";
+      canvas.hoverCursor = "crosshair";
+    } else {
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+    }
+  }, [activeTool, isSpacePressed]);
 
   // Sync canvas on document element changes
   useEffect(() => {
