@@ -20,6 +20,8 @@ export function useKeyboardShortcuts() {
 
   const setActiveTool = useToolStore((s) => s.setActiveTool);
   const setIsSpacePressed = useToolStore((s) => s.setIsSpacePressed);
+  const zoom = useToolStore((s) => s.zoom);
+  const setZoom = useToolStore((s) => s.setZoom);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -32,6 +34,7 @@ export function useKeyboardShortcuts() {
 
       // Spacebar Hand Tool (Hold)
       if (e.code === "Space" && !isInput && !e.repeat) {
+        e.preventDefault();
         setIsSpacePressed(true);
       }
 
