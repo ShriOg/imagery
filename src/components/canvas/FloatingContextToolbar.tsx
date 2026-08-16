@@ -563,52 +563,254 @@ function SingleElementToolbar({ activeElement }: { activeElement: any }) {
           </>
         )}
 
-        {/* TEXT SPECIFIC: Font & Size */}
+        {/* TEXT SPECIFIC: Full Typography Inspector */}
         {isText && (
           <>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="flex items-center gap-2.5 cursor-pointer group px-2 py-1 rounded-xl hover:bg-surface-variant/50 transition-colors"
-              onClick={() => {
-                const fonts = ["Inter", "Playfair Display", "Space Grotesk", "Plus Jakarta Sans"];
-                const nextFont = fonts[(fonts.indexOf(textEl.fontFamily || "Inter") + 1) % fonts.length];
-                updateElement(activeElement.id, { fontFamily: nextFont }, true);
-              }}
-            >
-              <span className="material-symbols-outlined text-on-surface-variant text-[18px] group-hover:text-primary transition-colors">
-                match_case
-              </span>
-              <div className="flex flex-col">
-                <span className="font-body-md text-xs font-semibold text-on-surface">{textEl.fontFamily || "Inter"}</span>
-                <span className="text-[9px] text-on-surface-variant">Click to cycle</span>
+            {/* Quick inline: Font name + size stepper */}
+            <div className="flex items-center gap-2">
+              <Popover.Root>
+                <Popover.Trigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-variant/60 hover:bg-surface-variant text-on-surface text-xs font-semibold cursor-pointer transition-colors border border-outline-variant/10 max-w-[120px]"
+                    title="Font Family"
+                  >
+                    <span className="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">font_download</span>
+                    <span className="truncate">{textEl.fontFamily || "Inter"}</span>
+                    <span className="material-symbols-outlined text-[12px] text-on-surface-variant shrink-0">expand_more</span>
+                  </motion.button>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Content
+                    side="top"
+                    sideOffset={16}
+                    className="z-[60] w-64 p-3 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-1 text-on-surface"
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-2 pb-1">Font Family</span>
+                    {[
+                      { name: "Inter", label: "Inter" },
+                      { name: "Playfair Display", label: "Playfair Display" },
+                      { name: "Space Grotesk", label: "Space Grotesk" },
+                      { name: "Plus Jakarta Sans", label: "Plus Jakarta Sans" },
+                      { name: "JetBrains Mono", label: "JetBrains Mono" },
+                      { name: "Georgia", label: "Georgia" },
+                      { name: "Impact", label: "Impact" },
+                      { name: "Arial", label: "Arial" },
+                      { name: "Times New Roman", label: "Times New Roman" },
+                      { name: "Courier New", label: "Courier New" },
+                    ].map((font) => (
+                      <button
+                        key={font.name}
+                        onClick={() => updateElement(activeElement.id, { fontFamily: font.name }, true)}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm cursor-pointer transition-colors ${
+                          (textEl.fontFamily || "Inter") === font.name
+                            ? "bg-primary/15 text-primary"
+                            : "hover:bg-surface-variant text-on-surface"
+                        }`}
+                        style={{ fontFamily: font.name }}
+                      >
+                        <span>{font.label}</span>
+                        {(textEl.fontFamily || "Inter") === font.name && (
+                          <span className="material-symbols-outlined text-[14px]">check</span>
+                        )}
+                      </button>
+                    ))}
+                  </Popover.Content>
+                </Popover.Portal>
+              </Popover.Root>
+
+              {/* Size stepper */}
+              <div className="flex items-center gap-0.5 bg-surface-variant/50 rounded-xl px-1 border border-outline-variant/10">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => updateElement(activeElement.id, { fontSize: Math.max(6, textEl.fontSize - 2) }, true)}
+                  className="p-1 text-on-surface-variant hover:text-on-surface rounded-lg transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">remove</span>
+                </motion.button>
+                <input
+                  type="number"
+                  value={textEl.fontSize}
+                  min={6}
+                  max={400}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value);
+                    if (!isNaN(v) && v >= 6) updateElement(activeElement.id, { fontSize: v }, true);
+                  }}
+                  className="w-10 text-center text-xs font-mono font-semibold text-on-surface bg-transparent outline-none appearance-none"
+                />
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => updateElement(activeElement.id, { fontSize: textEl.fontSize + 2 }, true)}
+                  className="p-1 text-on-surface-variant hover:text-on-surface rounded-lg transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">add</span>
+                </motion.button>
               </div>
-            </motion.div>
+            </div>
 
             <div className="w-px h-6 bg-surface-variant"></div>
 
-            <div className="flex items-center gap-1">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => updateElement(activeElement.id, { fontSize: Math.max(8, textEl.fontSize - 4) }, true)}
-                className="p-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors cursor-pointer"
-                title="Decrease Font Size"
-              >
-                <span className="material-symbols-outlined text-[16px]">remove</span>
-              </motion.button>
-              <span className="text-xs font-mono font-medium text-on-surface min-w-[32px] text-center">
-                {textEl.fontSize}px
-              </span>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => updateElement(activeElement.id, { fontSize: textEl.fontSize + 4 }, true)}
-                className="p-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors cursor-pointer"
-                title="Increase Font Size"
-              >
-                <span className="material-symbols-outlined text-[16px]">add</span>
-              </motion.button>
-            </div>
+            {/* Full Typography Controls Popover */}
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-variant/60 hover:bg-surface-variant text-on-surface text-xs font-semibold cursor-pointer transition-colors border border-outline-variant/10"
+                  title="Typography"
+                >
+                  <span className="material-symbols-outlined text-[15px]">text_fields</span>
+                  <span>Type</span>
+                </motion.button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="top"
+                  sideOffset={16}
+                  className="z-[60] w-[300px] p-5 bg-surface-container-highest/98 backdrop-blur-3xl border border-outline-variant/20 rounded-3xl shadow-2xl animate-in fade-in-0 zoom-in-95 flex flex-col gap-4 text-on-surface"
+                >
+                  <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Typography</span>
+                    <button
+                      onClick={() => updateElement(activeElement.id, {
+                        fontWeight: 400, italic: false, underline: false, strikethrough: false,
+                        uppercase: false, letterSpacing: 0, lineHeight: 1.2, textAlign: "left"
+                      }, true)}
+                      className="text-[11px] text-primary hover:underline cursor-pointer"
+                    >Reset</button>
+                  </div>
+
+                  {/* Font Weight */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[11px] font-semibold text-on-surface-variant">Weight</span>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[
+                        { w: 300, label: "Light" },
+                        { w: 400, label: "Regular" },
+                        { w: 600, label: "Semi" },
+                        { w: 700, label: "Bold" },
+                        { w: 800, label: "Extra" },
+                        { w: 900, label: "Black" },
+                      ].map(({ w, label }) => (
+                        <button
+                          key={w}
+                          onClick={() => updateElement(activeElement.id, { fontWeight: w }, true)}
+                          className={`py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-colors border ${
+                            (textEl.fontWeight || 400) === w
+                              ? "bg-primary/15 text-primary border-primary/30"
+                              : "bg-surface-container/60 text-on-surface-variant border-outline-variant/15 hover:bg-surface-variant"
+                          }`}
+                          style={{ fontWeight: w }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Text Alignment */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[11px] font-semibold text-on-surface-variant">Alignment</span>
+                    <div className="flex items-center gap-1 bg-surface-container/50 p-1 rounded-xl">
+                      {(["left", "center", "right", "justify"] as const).map((align) => {
+                        const icons: Record<string, string> = {
+                          left: "format_align_left", center: "format_align_center",
+                          right: "format_align_right", justify: "format_align_justify"
+                        };
+                        return (
+                          <button
+                            key={align}
+                            onClick={() => updateElement(activeElement.id, { textAlign: align }, true)}
+                            title={align}
+                            className={`flex-1 flex items-center justify-center p-1.5 rounded-lg cursor-pointer transition-colors ${
+                              textEl.textAlign === align
+                                ? "bg-primary/20 text-primary"
+                                : "text-on-surface-variant hover:bg-surface-variant"
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">{icons[align]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Style Toggles: Italic, Underline, Strikethrough, Uppercase */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[11px] font-semibold text-on-surface-variant">Style</span>
+                    <div className="flex items-center gap-1">
+                      {[
+                        { key: "italic", icon: "format_italic", title: "Italic", val: textEl.italic },
+                        { key: "underline", icon: "format_underlined", title: "Underline", val: textEl.underline },
+                        { key: "strikethrough", icon: "strikethrough_s", title: "Strikethrough", val: textEl.strikethrough },
+                        { key: "uppercase", icon: "text_fields", title: "Uppercase", val: textEl.uppercase },
+                      ].map(({ key, icon, title, val }) => (
+                        <motion.button
+                          key={key}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.92 }}
+                          onClick={() => updateElement(activeElement.id, { [key]: !val }, true)}
+                          title={title}
+                          className={`flex-1 flex items-center justify-center p-2 rounded-xl cursor-pointer transition-colors border ${
+                            val
+                              ? "bg-primary/15 text-primary border-primary/25"
+                              : "bg-surface-container/50 text-on-surface-variant border-outline-variant/10 hover:bg-surface-variant"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[17px]">{icon}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Letter Spacing */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
+                      <span>Letter Spacing</span>
+                      <span className="font-mono">{textEl.letterSpacing ?? 0}</span>
+                    </div>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[textEl.letterSpacing ?? 0]}
+                      min={-5}
+                      max={30}
+                      step={0.5}
+                      onValueChange={([val]) => updateElement(activeElement.id, { letterSpacing: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { letterSpacing: val }, true)}
+                    >
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                    </Slider.Root>
+                  </div>
+
+                  {/* Line Height */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
+                      <span>Line Height</span>
+                      <span className="font-mono">{(textEl.lineHeight ?? 1.2).toFixed(1)}</span>
+                    </div>
+                    <Slider.Root
+                      className="relative flex items-center select-none touch-none w-full h-4 cursor-pointer"
+                      value={[textEl.lineHeight ?? 1.2]}
+                      min={0.8}
+                      max={3.0}
+                      step={0.1}
+                      onValueChange={([val]) => updateElement(activeElement.id, { lineHeight: val }, false)}
+                      onValueCommit={([val]) => updateElement(activeElement.id, { lineHeight: val }, true)}
+                    >
+                      <Slider.Track className="bg-surface-variant relative grow rounded-full h-1.5">
+                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block w-4 h-4 bg-primary shadow-lg rounded-full focus:outline-none" />
+                    </Slider.Root>
+                  </div>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
 
             <div className="w-px h-6 bg-surface-variant"></div>
           </>
