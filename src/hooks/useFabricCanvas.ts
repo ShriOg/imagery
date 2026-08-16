@@ -356,7 +356,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
             const img = existing as fabric.FabricImage;
             const prevSrc = (existing as any).data?.src;
 
-            if (prevSrc && prevSrc !== imgEl.src) {
+            if (prevSrc !== imgEl.src) {
               // Image source changed (e.g. crop applied) -> reload image from new src
               fabric.FabricImage.fromURL(imgEl.src, { crossOrigin: "anonymous" }).then((newImg) => {
                 if (!fabricRef.current) return;

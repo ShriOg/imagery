@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToolStore } from "@/store/useToolStore";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { TextElement, ShapeElement, ImageElement } from "@/types/canvas";
+import { useAIAssistant } from "@/hooks/useAIAssistant";
 
 const AI_SUGGESTIONS = [
   { icon: "auto_awesome", label: "Generate Editorial Poster Layout", prompt: "Create a modern editorial luxury layout with stylish typography" },
@@ -52,141 +53,12 @@ export function CommandPalette() {
     }
   }, [isAiPaletteOpen]);
 
+  const { executePrompt } = useAIAssistant();
+
   // Execute AI action on the canvas
   const handleExecutePrompt = async (userPrompt: string) => {
     if (!userPrompt.trim() || isGenerating) return;
-
-    setIsGenerating(true);
-
-    // Simulate AI pipeline with real canvas modifications
-    setTimeout(() => {
-      commitHistory();
-      const lower = userPrompt.toLowerCase();
-
-      if (lower.includes("typography") || lower.includes("headline") || lower.includes("poster")) {
-        const text1: TextElement = {
-          id: `el_ai_text_${Date.now()}`,
-          name: "AI Editorial Headline",
-          type: "text",
-          content: "HAUTE COUTURE",
-          fontFamily: "Playfair Display",
-          fontSize: 64,
-          fontWeight: 700,
-          fill: "#FFE2AB",
-          textAlign: "center",
-          lineHeight: 1.1,
-          letterSpacing: 4,
-          underline: false,
-          italic: false,
-          x: Math.round(document.width / 2),
-          y: Math.round(document.height * 0.35),
-          width: 700,
-          height: 80,
-          rotation: 0,
-          opacity: 1,
-          zIndex: 10,
-          locked: false,
-          visible: true,
-        };
-
-        const text2: TextElement = {
-          id: `el_ai_sub_${Date.now()}`,
-          name: "AI Subtitle",
-          type: "text",
-          content: "SPRING / SUMMER COLLECTION • STUDIO EDITION",
-          fontFamily: "Space Grotesk",
-          fontSize: 18,
-          fontWeight: 500,
-          fill: "#C8C6C5",
-          textAlign: "center",
-          lineHeight: 1.2,
-          letterSpacing: 6,
-          underline: false,
-          italic: false,
-          x: Math.round(document.width / 2),
-          y: Math.round(document.height * 0.44),
-          width: 600,
-          height: 40,
-          rotation: 0,
-          opacity: 0.9,
-          zIndex: 11,
-          locked: false,
-          visible: true,
-        };
-
-        addElement(text1);
-        addElement(text2);
-      } else if (lower.includes("frame") || lower.includes("geometric")) {
-        const frame: ShapeElement = {
-          id: `el_ai_frame_${Date.now()}`,
-          name: "AI Minimal Frame",
-          type: "shape",
-          shapeKind: "rectangle",
-          fill: "transparent",
-          stroke: "#fbbc00",
-          strokeWidth: 2,
-          cornerRadius: 24,
-          strokeStyle: "solid",
-          x: Math.round(document.width / 2),
-          y: Math.round(document.height / 2),
-          width: Math.round(document.width * 0.75),
-          height: Math.round(document.height * 0.75),
-          rotation: 0,
-          opacity: 0.8,
-          zIndex: 5,
-          locked: false,
-          visible: true,
-        };
-        addElement(frame);
-      } else if (lower.includes("warm") || lower.includes("lighting") || lower.includes("glow")) {
-        updateDocumentProps({ backgroundColor: "#1c1813" });
-        const glow: ShapeElement = {
-          id: `el_ai_glow_${Date.now()}`,
-          name: "AI Ambient Glow",
-          type: "shape",
-          shapeKind: "ellipse",
-          fill: "rgba(251, 188, 0, 0.08)",
-          stroke: "transparent",
-          strokeWidth: 0,
-          x: Math.round(document.width / 2),
-          y: Math.round(document.height / 2),
-          width: Math.round(document.width * 0.6),
-          height: Math.round(document.height * 0.4),
-          rotation: 0,
-          opacity: 1,
-          zIndex: 0,
-          locked: true,
-          visible: true,
-        };
-        addElement(glow);
-      } else {
-        // Generic AI generation
-        const accent: ShapeElement = {
-          id: `el_ai_accent_${Date.now()}`,
-          name: "AI Studio Accent",
-          type: "shape",
-          shapeKind: "rectangle",
-          fill: "rgba(251, 188, 0, 0.12)",
-          stroke: "#fbbc00",
-          strokeWidth: 1.5,
-          cornerRadius: 16,
-          strokeStyle: "solid",
-          x: Math.round(document.width / 2),
-          y: Math.round(document.height / 2),
-          width: 480,
-          height: 240,
-          rotation: 0,
-          opacity: 0.95,
-          zIndex: 1,
-          locked: false,
-          visible: true,
-        };
-        addElement(accent);
-      }
-
-      setIsGenerating(false);
-      setAiPaletteOpen(false);
-    }, 1200);
+    await executePrompt(userPrompt);
   };
 
   return (

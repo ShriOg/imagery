@@ -1,7 +1,7 @@
-import { CanvasState } from "@/lib/types";
+import { CanvasDocument } from "@/types/canvas";
 
 export interface AIEditResponse {
-  canvas: CanvasState;
+  canvas: CanvasDocument;
   summary?: string;
 }
 
@@ -9,7 +9,7 @@ export interface AIProvider {
   name: string;
   edit(
     prompt: string,
-    currentCanvas: CanvasState,
+    currentCanvas: CanvasDocument,
     history: Array<{ role: 'user' | 'assistant', content: string }>
   ): Promise<AIEditResponse>;
 }
