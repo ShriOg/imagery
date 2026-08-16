@@ -8,6 +8,8 @@ import { FloatingContextToolbar } from "@/components/canvas/FloatingContextToolb
 import { LayerDrawer } from "@/components/panels/LayerDrawer";
 import { AssetPickerModal } from "@/components/panels/AssetPickerModal";
 import { ExportModal } from "@/components/modals/ExportModal";
+import { CropModal } from "@/components/modals/CropModal";
+import { CommandPalette } from "@/components/modals/CommandPalette";
 
 export default function EditorPage() {
   return (
@@ -38,9 +40,11 @@ export default function EditorPage() {
         </div>
       </main>
 
-      {/* Global Modals */}
+      {/* Global Modals & AI Palette */}
       <AssetPickerModal />
       <ExportModal />
+      <CropModal />
+      <CommandPalette />
     </div>
   );
 }

@@ -18,6 +18,7 @@ export function TopBar() {
   const zoom = useToolStore((s) => s.zoom);
   const setZoom = useToolStore((s) => s.setZoom);
   const setExportModalOpen = useToolStore((s) => s.setExportModalOpen);
+  const setAiPaletteOpen = useToolStore((s) => s.setAiPaletteOpen);
 
   const [isNavOpen, setIsNavOpen] = useState(false);
 
@@ -27,13 +28,15 @@ export function TopBar() {
         {/* Left: Hamburger + Logo + Project Title */}
         <div className="flex items-center gap-4">
           {/* Hamburger Menu Trigger */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsNavOpen(true)}
             className="p-2 -ml-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none cursor-pointer flex items-center justify-center"
             title="Open Navigation"
           >
             <span className="material-symbols-outlined text-[22px]">menu</span>
-          </button>
+          </motion.button>
 
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -69,26 +72,45 @@ export function TopBar() {
           </div>
         </div>
 
-        {/* Right: Actions, Zoom, Export, Search, Notifications, Profile */}
+        {/* Right: AI Palette, Actions, Zoom, Export, Search, Notifications, Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
+          {/* AI Command Palette Trigger (Glowing ✨) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setAiPaletteOpen(true)}
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-amber-500/15 text-primary border border-primary/35 rounded-full font-semibold text-xs shadow-[0_0_20px_rgba(251,188,0,0.18)] hover:border-primary/70 transition-all cursor-pointer"
+            title="Open AI Command Palette (Cmd+K)"
+          >
+            <span className="material-symbols-outlined text-[16px] text-primary animate-pulse">auto_awesome</span>
+            <span className="hidden sm:inline">Ask AI</span>
+            <span className="text-[10px] font-mono opacity-60 bg-surface-container px-1.5 py-0.5 rounded ml-0.5">⌘K</span>
+          </motion.button>
+
+          <div className="w-px h-5 bg-outline-variant/20 hidden sm:block"></div>
+
           {/* Undo / Redo */}
           <div className="flex items-center gap-0.5 bg-surface-variant/40 p-1 rounded-xl">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={undo}
               disabled={!canUndo}
               title="Undo (Ctrl+Z)"
-              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">undo</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={redo}
               disabled={!canRedo}
               title="Redo (Ctrl+Y)"
-              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">redo</span>
-            </button>
+            </motion.button>
           </div>
 
           <div className="w-px h-5 bg-outline-variant/20 hidden sm:block"></div>
@@ -96,10 +118,14 @@ export function TopBar() {
           {/* Zoom */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-1.5 font-label-md text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/60 px-2.5 py-1.5 rounded-xl border border-outline-variant/10 transition-colors outline-none cursor-pointer">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-1.5 font-label-md text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/60 px-2.5 py-1.5 rounded-xl border border-outline-variant/10 transition-colors outline-none cursor-pointer"
+              >
                 <span className="material-symbols-outlined text-[16px]">zoom_in</span>
                 <span>{Math.round(zoom * 100)}%</span>
-              </button>
+              </motion.button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content
@@ -126,23 +152,25 @@ export function TopBar() {
           </DropdownMenu.Root>
 
           {/* Export Button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setExportModalOpen(true)}
-            className="px-5 py-1.5 bg-primary text-on-primary font-label-md text-xs font-semibold rounded-full shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-all hover:scale-105 active:scale-95 outline-none cursor-pointer"
+            className="px-5 py-1.5 bg-primary text-on-primary font-label-md text-xs font-semibold rounded-full shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-all outline-none cursor-pointer"
           >
             Export
-          </button>
+          </motion.button>
 
           <div className="w-px h-5 bg-outline-variant/20 hidden md:block"></div>
 
           {/* Search & Notifications & Profile */}
           <div className="flex items-center gap-1.5">
-            <button className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex cursor-pointer">
               <span className="material-symbols-outlined text-[20px]">search</span>
-            </button>
-            <button className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex">
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-1.5 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors hidden md:flex cursor-pointer">
               <span className="material-symbols-outlined text-[20px]">notifications</span>
-            </button>
+            </motion.button>
             <img
               alt="Profile"
               className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed-dim/20 ml-1"

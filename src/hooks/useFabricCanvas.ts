@@ -243,7 +243,7 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
             mtr: true,
           });
 
-          (img as any).data = { id: el.id };
+          (img as any).data = { id: el.id, src: imgEl.src };
 
           const existing = canvas.getObjects().find((o) => (o as any).data?.id === el.id);
           if (existing) {
@@ -354,15 +354,64 @@ export function useFabricCanvas(canvasElRef: React.RefObject<HTMLCanvasElement |
           } else if (el.type === "image" && existing.type === "image") {
             const imgEl = el as ImageElement;
             const img = existing as fabric.FabricImage;
-            const naturalW = img.width || 1;
-            const naturalH = img.height || 1;
-            existing.set({
-              scaleX: imgEl.width / naturalW,
-              scaleY: imgEl.height / naturalH,
-              flipX: imgEl.flipX || false,
-              flipY: imgEl.flipY || false,
-              lockUniScaling: true,
-            });
+            const prevSrc = (existing as any).data?.src;
+
+            if (prevSrc && prevSrc !== imgEl.src) {
+              // Image source changed (e.g. crop applied) -> reload image from new src
+              fabric.FabricImage.fromURL(imgEl.src, { crossOrigin: "anonymous" }).then((newImg) => {
+                if (!fabricRef.current) return;
+                const canvas = fabricRef.current;
+                const natW = newImg.width || 1;
+                const natH = newImg.height || 1;
+                newImg.set({
+                  left: imgEl.x,
+                  top: imgEl.y,
+                  width: natW,
+                  height: natH,
+                  scaleX: imgEl.width / natW,
+                  scaleY: imgEl.height / natH,
+                  flipX: imgEl.flipX || false,
+                  flipY: imgEl.flipY || false,
+                  lockUniScaling: true,
+                  originX: "center",
+                  originY: "center",
+                });
+                (newImg as any).data = { id: el.id, src: imgEl.src };
+                newImg.setControlsVisibility({
+                  mt: false,
+                  mb: false,
+                  ml: false,
+                  mr: false,
+                  tr: true,
+                  tl: true,
+                  br: true,
+                  bl: true,
+                  mtr: true,
+                });
+                const idx = canvas.getObjects().indexOf(existing);
+                canvas.remove(existing);
+                if (idx >= 0) {
+                  canvas.insertAt(idx, newImg);
+                } else {
+                  canvas.add(newImg);
+                }
+                if (currentSelectedIds.includes(el.id)) {
+                  canvas.setActiveObject(newImg);
+                }
+                syncCanvasZIndex(canvas, elements);
+                canvas.requestRenderAll();
+              });
+            } else {
+              const naturalW = img.width || 1;
+              const naturalH = img.height || 1;
+              existing.set({
+                scaleX: imgEl.width / naturalW,
+                scaleY: imgEl.height / naturalH,
+                flipX: imgEl.flipX || false,
+                flipY: imgEl.flipY || false,
+                lockUniScaling: true,
+              });
+            }
           }
         } else {
           const newObj = createFabricObject(el);

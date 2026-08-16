@@ -26,8 +26,33 @@ export function CanvasWorkspace() {
   const activeTool = useToolStore((s) => s.activeTool);
   const isSpacePressed = useToolStore((s) => s.isSpacePressed);
 
+  const setDocument = useCanvasStore((s) => s.setDocument);
+
   const [isPanning, setIsPanning] = useState(false);
   const startPanRef = useRef({ x: 0, y: 0 });
+
+  // Rehydrate persisted document from IndexedDB on initial load
+  useEffect(() => {
+    import("@/lib/storage/db").then(({ getActiveDocument }) => {
+      getActiveDocument().then((savedDoc) => {
+        if (savedDoc && savedDoc.elements) {
+          // Purge any old legacy template elements
+          const cleanElements = savedDoc.elements.filter(
+            (el) => el.id !== "el_title_1" && el.id !== "el_subtitle_1" && el.id !== "el_accent_box"
+          );
+          if (cleanElements.length > 0) {
+            const currentDoc = useCanvasStore.getState().document;
+            if (currentDoc.elements.length === 0) {
+              setDocument({
+                ...savedDoc,
+                elements: cleanElements,
+              });
+            }
+          }
+        }
+      });
+    });
+  }, [setDocument]);
 
   // Store fabric instance on window for export access
   useEffect(() => {
@@ -141,6 +166,7 @@ export function CanvasWorkspace() {
     }
   };
 
+  const isGenerating = useToolStore((s) => s.isGenerating);
   const isHandActive = activeTool === "hand" || isSpacePressed;
 
   return (
@@ -160,6 +186,9 @@ export function CanvasWorkspace() {
           : "cursor-default"
       }`}
     >
+      {/* Subtle Studio Vignette Focus Overlay */}
+      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_140px_rgba(0,0,0,0.8)] z-10" />
+
       {/* Stage Pan/Zoom Transform Container */}
       <div
         style={{
@@ -176,7 +205,11 @@ export function CanvasWorkspace() {
             height: document.height,
             backgroundColor: document.backgroundColor,
           }}
-          className="shadow-2xl shadow-black/80 rounded-sm relative overflow-hidden transition-colors"
+          className={`shadow-2xl shadow-black/80 rounded-sm relative overflow-hidden transition-all duration-500 ${
+            isGenerating
+              ? "ring-4 ring-primary/60 shadow-[0_0_80px_rgba(251,188,0,0.4)] animate-pulse"
+              : "ring-1 ring-white/5"
+          }`}
         >
           {/* HTML5 Canvas instance for Fabric.js v6 */}
           <canvas ref={canvasElRef} id="fabric-canvas" />
@@ -185,3 +218,4 @@ export function CanvasWorkspace() {
     </div>
   );
 }
+

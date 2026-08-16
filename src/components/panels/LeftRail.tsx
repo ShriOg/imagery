@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { useToolStore, ToolType } from "@/store/useToolStore";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { ShapeKind } from "@/types/canvas";
@@ -37,53 +38,63 @@ export function LeftRail() {
 
   const getButtonClass = (isActive: boolean) => 
     isActive 
-      ? "p-3 text-primary bg-surface-variant rounded-xl shadow-inner transition-all outline-none"
-      : "p-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none";
+      ? "p-3 text-primary bg-surface-variant rounded-xl shadow-inner transition-all outline-none cursor-pointer"
+      : "p-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none cursor-pointer";
 
   return (
-    <div className="absolute top-6 left-6 bottom-6 w-16 bg-surface-container/90 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 z-20 flex flex-col items-center py-6 gap-2">
-      <button 
+    <div className="absolute top-6 left-6 bottom-6 w-16 bg-surface-container/90 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 z-20 flex flex-col items-center py-6 gap-2 select-none">
+      <motion.button 
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         className={getButtonClass(activeTool === "select")}
         onClick={() => handleToolSelect("select")}
+        title="Select Tool (V)"
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "select" ? "'FILL' 1" : "'FILL' 0" }}>
           arrow_selector_tool
         </span>
-      </button>
+      </motion.button>
 
-      {/* Since hand tool wasn't in HTML, I'll add it below select or skip it. Let's add it cleanly. */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         className={getButtonClass(activeTool === "hand")}
         onClick={() => handleToolSelect("hand")}
-        title="Pan Tool (H)"
+        title="Pan Tool (H or Spacebar)"
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "hand" ? "'FILL' 1" : "'FILL' 0" }}>
           pan_tool
         </span>
-      </button>
+      </motion.button>
 
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         className={getButtonClass(activeTool === "text")}
         onClick={() => handleToolSelect("text")}
+        title="Text Tool (T)"
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "text" ? "'FILL' 1" : "'FILL' 0" }}>
           text_fields
         </span>
-      </button>
+      </motion.button>
 
       <Popover.Root open={isShapeMenuOpen} onOpenChange={setIsShapeMenuOpen}>
         <Popover.Trigger asChild>
-          <button 
+          <motion.button 
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
             className={getButtonClass(activeTool === "shape")}
             onClick={() => {
               setActiveTool("shape");
               setIsShapeMenuOpen(true);
             }}
+            title="Shapes (U)"
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTool === "shape" ? "'FILL' 1" : "'FILL' 0" }}>
               category
             </span>
-          </button>
+          </motion.button>
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
@@ -94,43 +105,52 @@ export function LeftRail() {
             {SHAPES.map((shape) => {
               const isSelected = activeTool === "shape" && activeShapeKind === shape.kind;
               return (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   key={shape.kind}
                   onClick={() => {
                     setActiveShapeKind(shape.kind);
                     setIsShapeMenuOpen(false);
                   }}
                   className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none",
+                    "flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-xl transition-all outline-none cursor-pointer",
                     isSelected && "bg-primary-container text-on-primary-container"
                   )}
                 >
                   <span className="material-symbols-outlined text-[18px]">{shape.icon}</span>
                   <span>{shape.label}</span>
-                </button>
+                </motion.button>
               );
             })}
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
 
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         className={getButtonClass(false)}
         onClick={() => handleToolSelect("image")}
+        title="Asset Library / Upload"
       >
         <span className="material-symbols-outlined">image</span>
-      </button>
+      </motion.button>
 
       <div className="flex-1"></div>
 
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         className={getButtonClass(isLayerDrawerOpen)}
         onClick={toggleLayerDrawer}
+        title="Layer Stack Drawer"
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: isLayerDrawerOpen ? "'FILL' 1" : "'FILL' 0" }}>
           layers
         </span>
-      </button>
+      </motion.button>
     </div>
   );
 }
+

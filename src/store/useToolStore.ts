@@ -14,6 +14,9 @@ interface ToolStoreState {
   isLayerDrawerOpen: boolean;
   isAssetModalOpen: boolean;
   isExportModalOpen: boolean;
+  isCropModalOpen: boolean;
+  isAiPaletteOpen: boolean;
+  isGenerating: boolean;
 
   // Actions
   setActiveTool: (tool: ToolType) => void;
@@ -30,6 +33,9 @@ interface ToolStoreState {
   toggleLayerDrawer: () => void;
   setAssetModalOpen: (open: boolean) => void;
   setExportModalOpen: (open: boolean) => void;
+  setCropModalOpen: (open: boolean) => void;
+  setAiPaletteOpen: (open: boolean) => void;
+  setIsGenerating: (generating: boolean) => void;
 }
 
 export const useToolStore = create<ToolStoreState>((set) => ({
@@ -42,6 +48,9 @@ export const useToolStore = create<ToolStoreState>((set) => ({
   isLayerDrawerOpen: false,
   isAssetModalOpen: false,
   isExportModalOpen: false,
+  isCropModalOpen: false,
+  isAiPaletteOpen: false,
+  isGenerating: false,
 
   setActiveTool: (tool) => set({ activeTool: tool }),
   setActiveShapeKind: (shape) => set({ activeShapeKind: shape, activeTool: 'shape' }),
@@ -74,4 +83,7 @@ export const useToolStore = create<ToolStoreState>((set) => ({
   
   setAssetModalOpen: (open) => set({ isAssetModalOpen: open }),
   setExportModalOpen: (open) => set({ isExportModalOpen: open }),
+  setCropModalOpen: (open) => set({ isCropModalOpen: open }),
+  setAiPaletteOpen: (open) => set({ isAiPaletteOpen: open }),
+  setIsGenerating: (generating) => set({ isGenerating: generating }),
 }));

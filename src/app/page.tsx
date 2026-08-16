@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCanvasStore } from "@/store/useCanvasStore";
 
 export default function LandingPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const updateDocumentProps = useCanvasStore((s) => s.updateDocumentProps);
   const addElement = useCanvasStore((s) => s.addElement);
   const setDocument = useCanvasStore((s) => s.setDocument);
@@ -66,6 +67,22 @@ export default function LandingPage() {
       router.push("/editor");
     };
   }, [router, setDocument]);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (typeof event.target?.result === "string") {
+            loadAndInsertImage(event.target.result, file.name.replace(/\.[^/.]+$/, ""));
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    [loadAndInsertImage]
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -152,7 +169,7 @@ export default function LandingPage() {
       </header>
       
       <main className="w-full pt-20">
-        <div className="flex flex-col w-full items-center justify-center min-h-[calc(100vh-5rem)] py-16 px-container-padding relative overflow-hidden">
+        <div className="flex flex-col w-full items-center justify-center min-h-[calc(100vh-5rem)] py-16 px-container-padding relative">
           <div
             className="absolute inset-0 pointer-events-none opacity-20"
             style={{
@@ -168,13 +185,21 @@ export default function LandingPage() {
               Drop an image to enter the studio.
             </p>
             <div
-              className="relative w-full max-w-2xl bg-surface-container/60 backdrop-blur-3xl rounded-[3rem] p-12 transition-all duration-500 hover:bg-surface-container/80 hover:shadow-2xl hover:shadow-primary/5 group cursor-pointer border border-on-surface/5 overflow-hidden"
+              className="relative w-full max-w-2xl bg-surface-container/60 backdrop-blur-3xl rounded-[3rem] p-12 transition-all duration-500 hover:bg-surface-container/80 hover:shadow-2xl hover:shadow-primary/5 group cursor-pointer border border-on-surface/5 overflow-hidden select-none"
               id="upload-zone"
               onDragEnter={highlight}
               onDragOver={highlight}
               onDragLeave={unhighlight}
               onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
             >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative z-10 flex flex-col items-center justify-center space-y-6">
                 <div className="w-24 h-24 rounded-full bg-surface-container-high flex items-center justify-center mb-4 transition-transform duration-500 group-hover:scale-110 shadow-lg shadow-black/20">
@@ -184,16 +209,20 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="font-headline-md text-headline-md text-on-surface mb-2">
-                    Drag and drop
+                    Drag and drop or click to upload
                   </span>
                   <span className="font-body-md text-body-md text-on-surface-variant text-center max-w-sm">
-                    JPG, PNG, WebP or HEIC.<br />
+                    JPG, PNG, WebP or SVG.<br />
                     Maximum file size 50MB.
                   </span>
                 </div>
                 <button
-                  className="mt-8 px-8 py-4 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:bg-primary-fixed transition-colors shadow-lg shadow-primary/20 flex items-center gap-2"
-                  onClick={() => router.push("/editor")}
+                  type="button"
+                  className="mt-8 px-8 py-4 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:bg-primary-fixed transition-colors shadow-lg shadow-primary/20 flex items-center gap-2 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
                 >
                   <span className="material-symbols-outlined text-[20px]">
                     folder_open

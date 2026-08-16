@@ -49,78 +49,10 @@ const MAX_HISTORY = 50;
 const initialDocument: CanvasDocument = {
   id: 'doc_default',
   title: 'Untitled Studio Design',
-  width: 1080,
+  width: 1920,
   height: 1080,
-  backgroundColor: '#18181B',
-  elements: [
-    {
-      id: 'el_title_1',
-      name: 'Studio Title',
-      type: 'text',
-      content: 'Imagery Studio',
-      fontFamily: 'Playfair Display',
-      fontSize: 72,
-      fontWeight: 700,
-      fill: '#F5F5F0',
-      textAlign: 'center',
-      lineHeight: 1.1,
-      letterSpacing: -0.5,
-      underline: false,
-      italic: false,
-      x: 540,
-      y: 480,
-      width: 600,
-      height: 100,
-      rotation: 0,
-      opacity: 1,
-      zIndex: 1,
-      locked: false,
-      visible: true,
-    },
-    {
-      id: 'el_subtitle_1',
-      name: 'Subtitle',
-      type: 'text',
-      content: 'High-Precision Tactile Design Editor',
-      fontFamily: 'Space Grotesk',
-      fontSize: 24,
-      fontWeight: 400,
-      fill: '#A1A1AA',
-      textAlign: 'center',
-      lineHeight: 1.3,
-      letterSpacing: 2,
-      underline: false,
-      italic: false,
-      x: 540,
-      y: 570,
-      width: 600,
-      height: 40,
-      rotation: 0,
-      opacity: 0.85,
-      zIndex: 2,
-      locked: false,
-      visible: true,
-    },
-    {
-      id: 'el_accent_box',
-      name: 'Amber Accent',
-      type: 'shape',
-      shapeKind: 'rectangle',
-      fill: 'rgba(245, 158, 11, 0.08)',
-      stroke: '#F59E0B',
-      strokeWidth: 1.5,
-      cornerRadius: 24,
-      x: 540,
-      y: 530,
-      width: 720,
-      height: 220,
-      rotation: 0,
-      opacity: 0.9,
-      zIndex: 0,
-      locked: false,
-      visible: true,
-    }
-  ],
+  backgroundColor: '#131313',
+  elements: [],
 };
 
 export const useCanvasStore = create<CanvasStoreState>()(
@@ -358,3 +290,20 @@ export const useCanvasStore = create<CanvasStoreState>()(
     }),
   }))
 );
+
+// Auto-save debounce to IndexedDB
+if (typeof window !== "undefined") {
+  let saveTimer: any = null;
+  useCanvasStore.subscribe((state) => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try {
+        const { saveActiveDocument } = await import("@/lib/storage/db");
+        await saveActiveDocument(state.document);
+      } catch (err) {
+        console.warn("Auto-save to IndexedDB skipped:", err);
+      }
+    }, 400);
+  });
+}
+
