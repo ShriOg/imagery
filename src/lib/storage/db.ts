@@ -132,6 +132,32 @@ export async function listProjects(): Promise<Array<{ id: string; document: Canv
 }
 
 /**
+ * Get single project by ID
+ */
+export async function getProjectById(id: string): Promise<CanvasDocument | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_DOCUMENTS, "readonly");
+      const store = transaction.objectStore(STORE_DOCUMENTS);
+      const request = store.get(id);
+
+      request.onsuccess = () => {
+        if (request.result && request.result.document) {
+          resolve(request.result.document);
+        } else {
+          resolve(null);
+        }
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.warn("Failed to get project from IndexedDB:", err);
+    return null;
+  }
+}
+
+/**
  * Delete a saved project
  */
 export async function deleteProject(id: string): Promise<void> {

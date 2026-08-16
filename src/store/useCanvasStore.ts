@@ -21,6 +21,8 @@ interface CanvasStoreState {
   // Document Properties
   updateDocumentProps: (props: Partial<Pick<CanvasDocument, 'title' | 'width' | 'height' | 'backgroundColor'>>) => void;
   setDocument: (doc: CanvasDocument) => void;
+  createNewProject: (title?: string) => void;
+  loadProject: (doc: CanvasDocument) => void;
 
   // Element Actions
   addElement: (element: CanvasElement) => void;
@@ -108,6 +110,28 @@ export const useCanvasStore = create<CanvasStoreState>()(
     setDocument: (doc) => set((state) => {
       get().commitHistory();
       state.document = doc;
+      state.selectedIds = [];
+    }),
+
+    createNewProject: (title = 'Untitled Design') => set((state) => {
+      const newDoc: CanvasDocument = {
+        id: `proj_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`,
+        title,
+        width: 1920,
+        height: 1080,
+        backgroundColor: '#131313',
+        elements: [],
+      };
+      state.document = newDoc;
+      state.past = [];
+      state.future = [];
+      state.selectedIds = [];
+    }),
+
+    loadProject: (doc) => set((state) => {
+      state.document = doc;
+      state.past = [];
+      state.future = [];
       state.selectedIds = [];
     }),
 
@@ -298,12 +322,15 @@ if (typeof window !== "undefined") {
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       try {
-        const { saveActiveDocument } = await import("@/lib/storage/db");
+        const { saveActiveDocument, saveProject } = await import("@/lib/storage/db");
         await saveActiveDocument(state.document);
+        if (state.document.id && state.document.id !== 'active_document') {
+          await saveProject(state.document);
+        }
       } catch (err) {
         console.warn("Auto-save to IndexedDB skipped:", err);
       }
-    }, 400);
+    }, 300);
   });
 }
 

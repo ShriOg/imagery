@@ -16,6 +16,7 @@ interface ToolStoreState {
   isExportModalOpen: boolean;
   isCropModalOpen: boolean;
   isAiPaletteOpen: boolean;
+  isProjectsModalOpen: boolean;
   isGenerating: boolean;
 
   // Actions
@@ -35,6 +36,7 @@ interface ToolStoreState {
   setExportModalOpen: (open: boolean) => void;
   setCropModalOpen: (open: boolean) => void;
   setAiPaletteOpen: (open: boolean) => void;
+  setProjectsModalOpen: (open: boolean) => void;
   setIsGenerating: (generating: boolean) => void;
 }
 
@@ -50,6 +52,7 @@ export const useToolStore = create<ToolStoreState>((set) => ({
   isExportModalOpen: false,
   isCropModalOpen: false,
   isAiPaletteOpen: false,
+  isProjectsModalOpen: false,
   isGenerating: false,
 
   setActiveTool: (tool) => set({ activeTool: tool }),
@@ -85,5 +88,6 @@ export const useToolStore = create<ToolStoreState>((set) => ({
   setExportModalOpen: (open) => set({ isExportModalOpen: open }),
   setCropModalOpen: (open) => set({ isCropModalOpen: open }),
   setAiPaletteOpen: (open) => set({ isAiPaletteOpen: open }),
+  setProjectsModalOpen: (open) => set({ isProjectsModalOpen: open }),
   setIsGenerating: (generating) => set({ isGenerating: generating }),
 }));

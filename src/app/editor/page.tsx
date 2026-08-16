@@ -11,6 +11,7 @@ import { ExportModal } from "@/components/modals/ExportModal";
 import { CropModal } from "@/components/modals/CropModal";
 import { CommandPalette } from "@/components/modals/CommandPalette";
 import { ContextMenu } from "@/components/modals/ContextMenu";
+import { ProjectsModal } from "@/components/modals/ProjectsModal";
 
 export default function EditorPage() {
   return (
@@ -47,6 +48,7 @@ export default function EditorPage() {
       <CropModal />
       <CommandPalette />
       <ContextMenu />
+      <ProjectsModal />
     </div>
   );
 }

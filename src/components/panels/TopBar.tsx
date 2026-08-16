@@ -26,13 +26,14 @@ export function TopBar() {
   const setZoom = useToolStore((s) => s.setZoom);
   const setExportModalOpen = useToolStore((s) => s.setExportModalOpen);
   const setAiPaletteOpen = useToolStore((s) => s.setAiPaletteOpen);
+  const setProjectsModalOpen = useToolStore((s) => s.setProjectsModalOpen);
 
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   return (
     <>
       <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container-low/95 backdrop-blur-2xl z-40 px-6 flex items-center justify-between border-b border-outline-variant/10 select-none">
-        {/* Left: Hamburger + Logo + Project Title */}
+        {/* Left: Hamburger + Logo + Project Title + Projects Manager */}
         <div className="flex items-center gap-4">
           {/* Hamburger Menu Trigger */}
           <motion.button
@@ -119,6 +120,18 @@ export function TopBar() {
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
+
+          {/* Projects Hub Button */}
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setProjectsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-variant/70 hover:bg-surface-variant text-on-surface-variant hover:text-on-surface rounded-xl font-medium text-xs border border-outline-variant/15 transition-all cursor-pointer hidden lg:flex"
+            title="View All Saved Projects (IndexedDB)"
+          >
+            <span className="material-symbols-outlined text-[16px] text-primary">folder_open</span>
+            <span>Projects</span>
+          </motion.button>
         </div>
 
         {/* Right: AI Palette, Actions, Zoom, Export, Search, Notifications, Profile */}
@@ -288,22 +301,26 @@ export function TopBar() {
                   <span className="material-symbols-outlined text-[20px]">home</span>
                   <span>Home / Upload</span>
                 </Link>
-                <a
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); setIsNavOpen(false); }}
-                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm"
+                <button
+                  onClick={() => {
+                    setIsNavOpen(false);
+                    setProjectsModalOpen(true);
+                  }}
+                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm w-full text-left cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[20px]">folder_open</span>
                   <span>Projects</span>
-                </a>
-                <a
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); setIsNavOpen(false); }}
-                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm"
+                </button>
+                <button
+                  onClick={() => {
+                    setIsNavOpen(false);
+                    useToolStore.getState().setAssetModalOpen(true);
+                  }}
+                  className="flex items-center gap-4 px-5 py-3.5 rounded-2xl text-on-surface-variant hover:bg-surface-variant transition-all hover:text-on-surface text-sm w-full text-left cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[20px]">image</span>
-                  <span>Assets</span>
-                </a>
+                  <span>Assets & Upload</span>
+                </button>
               </nav>
 
               {/* Footer */}

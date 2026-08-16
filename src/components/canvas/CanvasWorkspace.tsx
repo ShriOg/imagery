@@ -207,10 +207,10 @@ export function CanvasWorkspace() {
             height: document.height,
             backgroundColor: document.backgroundColor,
           }}
-          className={`shadow-2xl shadow-black/80 rounded-sm relative overflow-hidden transition-all duration-500 ${
+          className={`rounded-md relative overflow-hidden transition-all duration-500 ${
             isGenerating
-              ? "ring-4 ring-primary/60 shadow-[0_0_80px_rgba(251,188,0,0.4)] animate-pulse"
-              : "ring-1 ring-white/5"
+              ? "ring-2 ring-primary shadow-[0_0_80px_rgba(251,188,0,0.5)] animate-pulse"
+              : "ring-1 ring-white/10 shadow-[0_0_60px_rgba(255,226,171,0.08),0_20px_60px_rgba(0,0,0,0.9),0_0_1px_1px_rgba(255,255,255,0.08)]"
           }`}
         >
           {/* HTML5 Canvas instance for Fabric.js v6 */}
